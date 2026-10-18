@@ -1,0 +1,384 @@
+---
+title: "Preparacion3parcial#2"
+output: html_document
+date: "2025-10-29"
+---
+
+## Cargar la data 
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+df1 <- data.frame(
+  orden = 16:24,
+  temp_C = c(44, 34, 43, 34, 41, 37, 42, 41, 28),
+  produccion_pct = c(73.0, 65.9, 75.2, 69.5, 78.6, 72.0, 80.2, 76.3, 69.5)
+)
+
+# Dataframe de la segunda imagen (tabla completa)
+df2 <- data.frame(
+  orden = 1:15,
+  temp_C = c(30, 32, 35, 34, 31, 27, 33, 34, 25, 38, 39, 30, 30, 39, 40),
+  produccion_pct = c(49.2, 55.3, 53.4, 59.9, 51.4, 52.1, 60.2, 60.5, 59.3, 
+                     64.5, 68.2, 56.0, 58.3, 70.8, 71.6)
+)
+
+# Si quieres combinar ambos dataframes en uno solo:
+df <- rbind(df2, df1)
+```
+
+## Punto 1
+Calcule la recta de mínimos cuadrados para predecir la producción (y) de temperatura (x).
+
+
+```{r }
+modelo1 <- lm(  produccion_pct ~ temp_C, data = df)
+print(modelo1)
+```
+
+## Punto 2
+Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique.
+
+```{r }
+df %>% 
+ggplot(aes( temp_C, produccion_pct)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: temperatura vs. produccion")+
+  theme_bw()
+```
+
+El modelo lineal NO es adecuado porque los datos muestran una relación curvilínea clara entre temperatura y producción
+
+
+
+
+
+## Punto 3 
+Grafique los residuos contra el orden en el que se hicieron las observaciones. ¿Hay una tendencia en los residuos con el tiempo? ¿El modelo lineal parece adecuado? Explique
+
+```{r}
+# CALCULAR PRIMERO LOS RESIDUOS
+df$residuos <- resid(modelo1)
+
+# Gráfico CORRECTO: Residuos vs Orden
+df %>% 
+  ggplot(aes(x = orden, y = residuos)) +
+  geom_point(size = 3, color = "red") +
+  geom_line(aes(group = 1), alpha = 0.3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "blue") +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Residuos vs Orden de Observaciones",
+       subtitle = "¿Existe tendencia temporal en los errores?",
+       x = "Orden de Observación", 
+       y = "Residuos del Modelo") +
+  theme_bw()
+```
+hay una tendencia positiva pero aun asi el modelo no servira ya que no se presenta una relacion lineal
+
+## Punto 4 
+
+
+Verifique si cumple o no los supuestos de los errores
+```{r }
+
+
+# Cargar las librerías (ejecutar al inicio de cada sesión)
+library(car)
+library(lmtest)
+library(ggplot2)
+ #FUNCIÓN MODIFICADA usando solo métodos del texto proporcionado
+verificar_supuestos_texto <- function(modelo) {
+  
+  cat("=== VERIFICACIÓN DE SUPUESTOS (Basado en texto proporcionado) ===\n\n")
+  
+  # Extraer residuos
+  r <- residuals(modelo)
+  
+  # 1. INDEPENDENCIA (Sección 7.8.2 del texto)
+  cat("1. INDEPENDENCIA:\n")
+  # Prueba de Durbin-Watson (mencionada en el texto)
+  if(require(car)) {
+    dw_test <- car::durbinWatsonTest(modelo)
+    cat("   Prueba Durbin-Watson:\n")
+    cat("   Estadístico D-W =", round(dw_test$dw, 4), "\n")
+    cat("   p-value =", round(dw_test$p, 4), "\n")
+    if(dw_test$p > 0.05) {
+      cat("   ✓ No se rechaza H0: Los errores son independientes\n")
+    } else {
+      cat("   ✗ Se rechaza H0: Los errores NO son independientes\n")
+    }
+  }
+  
+  # Gráfico ACF (mencionado en el texto)
+  acf(r, main = "Función de Autocorrelación (ACF) de los residuales")
+  
+  # 2. NORMALIDAD (Sección 7.8.3 del texto)
+  cat("\n2. NORMALIDAD:\n")
+  # Prueba de Shapiro-Wilk (mencionada en el texto)
+  shapiro_test <- shapiro.test(r)
+  cat("   Prueba Shapiro-Wilk:\n")
+  cat("   W =", round(shapiro_test$statistic, 4), "\n")
+  cat("   p-value =", round(shapiro_test$p.value, 4), "\n")
+  if(shapiro_test$p.value > 0.05) {
+    cat("   ✓ No se rechaza H0: Los errores siguen distribución normal\n")
+  } else {
+    cat("   ✗ Se rechaza H0: Los errores NO siguen distribución normal\n")
+  }
+  
+  # Gráfico Q-Q (mencionado en el texto)
+  car::qqPlot(r, main = "Gráfico Q-Q de los residuales")
+  
+  # 3. MEDIA CERO (Sección 7.8.4 del texto)
+  cat("\n3. MEDIA CERO:\n")
+  media_residuos <- mean(r)
+  cat("   Media de los residuos =", format(media_residuos, scientific = FALSE), "\n")
+  # Prueba t de una muestra (mencionada en el texto)
+  t_test <- t.test(r, mu = 0)
+  cat("   Prueba t: p-value =", round(t_test$p.value, 4), "\n")
+  if(t_test$p.value > 0.05) {
+    cat("   ✓ No se rechaza H0: La media de los errores es cero\n")
+  } else {
+    cat("   ✗ Se rechaza H0: La media de los errores NO es cero\n")
+  }
+  
+  # 4. HOMOCEDASTICIDAD (Sección 7.8.5 del texto)
+  cat("\n4. HOMOCEDASTICIDAD (Varianza constante):\n")
+  # Prueba de Breusch-Pagan (mencionada en el texto)
+  if(require(lmtest)) {
+    bp_test <- lmtest::bptest(modelo)
+    cat("   Prueba Breusch-Pagan:\n")
+    cat("   BP =", round(bp_test$statistic, 4), "\n")
+    cat("   p-value =", round(bp_test$p.value, 4), "\n")
+    if(bp_test$p.value > 0.05) {
+      cat("   ✓ No se rechaza H0: La varianza es constante\n")
+    } else {
+      cat("   ✗ Se rechaza H0: La varianza NO es constante\n")
+    }
+  }
+  
+  # Gráfico de residuos vs ajustados (mencionado en el texto)
+  plot_data <- data.frame(
+    Ajustados = fitted(modelo),
+    Residuales = r
+  )
+  
+  print(
+    ggplot(plot_data, aes(x = Ajustados, y = Residuales)) +
+      geom_point(size = 3, alpha = 0.7) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      geom_smooth(method = "loess", se = FALSE, color = "blue") +
+      labs(title = "Residuales vs Valores Ajustados - Verificación Homocedasticidad",
+           x = "Valores Ajustados", y = "Residuales") +
+      theme_bw()
+  )
+  
+  cat("\n=== RESUMEN FINAL ===\n")
+  cat("Basado en la verificación, el modelo", 
+      ifelse(bp_test$p.value > 0.05 & dw_test$p > 0.05 & shapiro_test$p.value > 0.05,
+             "CUMPLE", "NO CUMPLE"), 
+      "con los supuestos de los errores.\n")
+}
+
+# USAR LA FUNCIÓN
+verificar_supuestos_texto(modelo1)
+```
+
+
+
+```{r, include=FALSE}
+# ==================================================================================
+# POSIBLES INTERPRETACIONES DE LOS GRÁFICOS DE DIAGNÓSTICO DE SUPUESTOS
+# ==================================================================================
+
+# 1. GRÁFICO ACF (Función de Autocorrelación)
+# ----------------------------------------------
+# ¿Qué muestra?: La correlación entre residuos en diferentes rezagos temporales
+# 
+# POSIBLES INTERPRETACIONES:
+# 
+# A) PATRÓN IDEAL (Supuesto cumplido):
+#    - Todas las barras dentro de las líneas azules punteadas
+#    - Solo pueden salir 1-2 barras por azar (5% de probabilidad)
+#    - Indica: Los errores son INDEPENDIENTES entre sí
+# 
+# B) AUTOCORRELACIÓN POSITIVA:
+#    - Barras sobresalen HACIA ARRIBA en los primeros lags (1, 2, 3...)
+#    - Indica: Un error positivo tiende a seguirse de otro error positivo
+#    - Problema común en: Series de tiempo, datos ordenados temporalmente
+#    - Consecuencia: Subestimación de errores estándar, intervalos de confianza inválidos
+# 
+# C) AUTOCORRELACIÓN NEGATIVA:
+#    - Barras sobresalen HACIA ABAJO en los primeros lags
+#    - Indica: Un error positivo tiende a seguirse de un error negativo (oscilación)
+#    - Menos común pero indica dependencia temporal
+# 
+# D) PATRÓN ESTACIONAL/CÍCLICO:
+#    - Barras sobresalen en lags específicos (ej: cada 12 meses, cada 4 trimestres)
+#    - Indica: Existe un patrón repetitivo no capturado por el modelo
+#    - Solución: Incluir variables estacionales o diferenciación estacional
+# 
+# E) DECAIMIENTO LENTO:
+#    - Las barras disminuyen gradualmente pero se mantienen significativas
+#    - Indica: Fuerte dependencia temporal, posible tendencia no modelada
+#    - Solución: Considerar modelos de series de tiempo (ARIMA, etc.)
+
+
+# 2. GRÁFICO Q-Q (Quantile-Quantile Plot)
+# ----------------------------------------
+# ¿Qué muestra?: Compara cuantiles de residuos vs cuantiles de distribución normal
+# 
+# POSIBLES INTERPRETACIONES:
+# 
+# A) PATRÓN IDEAL (Supuesto cumplido):
+#    - Puntos alineados sobre la línea recta diagonal
+#    - Pueden desviarse ligeramente pero dentro de bandas azules
+#    - Indica: Los errores siguen una DISTRIBUCIÓN NORMAL
+# 
+# B) COLAS PESADAS (Heavy Tails):
+#    - Extremos inferior y superior se ALEJAN de la línea (forma de S invertida)
+#    - Extremo izquierdo cae por debajo, extremo derecho sube por encima
+#    - Indica: Hay más valores extremos de lo esperado (outliers)
+#    - Distribución similar a: t-Student con pocos grados de libertad
+#    - Problema: Mayor sensibilidad a valores atípicos
+# 
+# C) COLAS LIGERAS (Light Tails):
+#    - Extremos inferior y superior se ACERCAN a la línea (forma de S)
+#    - Extremo izquierdo sube, extremo derecho baja
+#    - Indica: Hay menos valores extremos de lo esperado
+#    - Distribución similar a: Uniforme
+#    - Menos común en la práctica
+# 
+# D) ASIMETRÍA POSITIVA (Sesgada a la derecha):
+#    - Puntos se curvan HACIA ARRIBA en el extremo superior
+#    - Extremo inferior puede estar cerca de la línea
+#    - Indica: Cola derecha más larga, valores grandes inusuales
+#    - Común en: Ingresos, precios, tiempos de espera
+#    - Solución: Transformación logarítmica o raíz cuadrada
+# 
+# E) ASIMETRÍA NEGATIVA (Sesgada a la izquierda):
+#    - Puntos se curvan HACIA ABAJO en el extremo inferior
+#    - Extremo superior puede estar cerca de la línea
+#    - Indica: Cola izquierda más larga, valores bajos inusuales
+#    - Menos común en datos naturales
+# 
+# F) FORMA DE S COMPLETA:
+#    - Curva hacia abajo en extremo inferior, hacia arriba en superior
+#    - Indica: Fuerte asimetría positiva
+#    - Solución: Transformación de Box-Cox
+# 
+# G) FORMA DE S INVERTIDA COMPLETA:
+#    - Curva hacia arriba en extremo inferior, hacia abajo en superior
+#    - Indica: Fuerte asimetría negativa
+# 
+# H) OUTLIERS AISLADOS:
+#    - Mayoría de puntos en la línea, pero 1-3 puntos muy alejados
+#    - Indica: Valores atípicos individuales
+#    - Solución: Investigar y posiblemente eliminar o usar regresión robusta
+# 
+# I) DOS GRUPOS SEPARADOS:
+#    - Puntos forman dos líneas paralelas
+#    - Indica: Posible mezcla de dos poblaciones diferentes
+#    - Problema: Puede haber una variable categórica importante no incluida
+
+
+# 3. GRÁFICO RESIDUALES VS VALORES AJUSTADOS
+# -------------------------------------------
+# ¿Qué muestra?: Relación entre residuos y valores predichos (homocedasticidad)
+# 
+# POSIBLES INTERPRETACIONES:
+# 
+# A) PATRÓN IDEAL (Supuesto cumplido):
+#    - Puntos dispersos ALEATORIAMENTE alrededor de la línea horizontal en y=0
+#    - Variabilidad vertical CONSTANTE a lo largo del eje X
+#    - Línea azul (loess) es horizontal y cercana a cero
+#    - Indica: HOMOCEDASTICIDAD (varianza constante)
+# 
+# B) FORMA DE EMBUDO (Funnel Shape) - Creciente:
+#    - Dispersión AUMENTA de izquierda a derecha
+#    - Puntos más juntos a la izquierda, más separados a la derecha
+#    - Indica: HETEROCEDASTICIDAD - la varianza aumenta con Y predicho
+#    - Común en: Datos económicos, ingresos, ventas
+#    - Solución: Transformación logarítmica, mínimos cuadrados ponderados (WLS)
+# 
+# C) FORMA DE EMBUDO INVERTIDO - Decreciente:
+#    - Dispersión DISMINUYE de izquierda a derecha
+#    - Puntos más separados a la izquierda, más juntos a la derecha
+#    - Indica: HETEROCEDASTICIDAD - la varianza disminuye con Y predicho
+#    - Menos común pero posible
+#    - Solución: Similar al caso anterior
+# 
+# D) FORMA DE ARCO O PARÁBOLA:
+#    - Línea azul (loess) tiene forma curva (U o U invertida)
+#    - Residuos muestran patrón sistemático
+#    - Indica: NO LINEALIDAD - falta un término cuadrático o polinomial
+#    - Problema: La relación entre X e Y no es lineal
+#    - Solución: Agregar términos cuadráticos (X²), cúbicos, o transformaciones
+# 
+# E) FORMA DE ONDA (Wave Pattern):
+#    - Línea azul sube y baja creando ondas
+#    - Indica: Falta de ajuste más compleja, múltiples no linealidades
+#    - Solución: Modelo más complejo, splines, GAM (Modelos Aditivos Generalizados)
+# 
+# F) TENDENCIA LINEAL NO CERO:
+#    - Línea azul es recta pero NO horizontal (tiene pendiente)
+#    - Todos los puntos por encima o debajo de cero sistemáticamente
+#    - Indica: Media de residuos NO es cero (problema con el intercepto)
+#    - Problema teórico: Esto no debería ocurrir en regresión por MCO
+#    - Investigar: Posible error en el código o datos mal preprocesados
+# 
+# G) GRUPOS O CLUSTERS SEPARADOS:
+#    - Puntos forman 2 o más nubes distintas
+#    - Indica: Posible variable categórica omitida
+#    - Ejemplo: Datos de hombres y mujeres mezclados sin incluir género
+#    - Solución: Incluir la variable categórica o hacer modelos separados
+# 
+# H) OUTLIERS EVIDENTES:
+#    - 1-3 puntos muy alejados del resto (residuos > |3| típicamente)
+#    - Resto de puntos siguen patrón normal
+#    - Indica: Observaciones atípicas o errores de medición
+#    - Solución: Investigar la causa, considerar eliminación o regresión robusta
+# 
+# I) BANDAS HORIZONTALES:
+#    - Puntos forman líneas horizontales paralelas
+#    - Indica: Variable dependiente o independiente es DISCRETA
+#    - Común en: Calificaciones (1-5), conteos pequeños
+#    - Puede ser normal si los datos son inherentemente discretos
+# 
+# J) VARIANZA CERO EN ALGUNAS REGIONES:
+#    - En ciertas zonas del eje X todos los puntos están exactamente en y=0
+#    - Indica: Modelo perfecto en esa región (sospechoso) o datos artificiales
+#    - Investigar: Posible error en los datos o sobrecalibración
+# 
+# K) PATRÓN DE ABANICO DOBLE:
+#    - Forma de reloj de arena (estrecho en el centro, ancho en extremos)
+#    - Indica: Heterocedasticidad compleja
+#    - Solución: Transformaciones no lineales o modelos más sofisticados
+
+
+
+
+# ==================================================================================
+# RESUMEN DE DECISIONES SEGÚN PATRONES OBSERVADOS
+# ==================================================================================
+# 
+# Si encuentras:
+# 1. ACF con barras fuera → Usar modelos de series de tiempo o GLS
+# 2. Q-Q con colas pesadas → Considerar regresión robusta o transformaciones
+# 3. Q-Q con asimetría → Aplicar transformación logarítmica/Box-Cox
+# 4. Residuales con embudo → Usar WLS o transformar Y
+# 5. Residuales con curva → Agregar términos polinomiales
+# 6. Outliers evidentes → Investigar y posiblemente eliminar
+# 7. Grupos separados → Incluir variables categóricas omitidas
+# 
+# IMPORTANTE: 
+# - Ningún modelo real cumple PERFECTAMENTE todos los supuestos
+# - Evalúa la SEVERIDAD de las violaciones, no la perfección absoluta
+# - Violaciones leves con n grande suelen ser tolerables (Teorema Central del Límite)
+# - Violaciones severas requieren acción correctiva
+# ==================================================================================
+```
+
+
+
+

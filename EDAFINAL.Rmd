@@ -1,0 +1,134 @@
+---
+title: "Concrete"
+output: html_document
+date: "2025-10-20"
+---
+
+## Contexto y Introduccion 
+
+📚 CONTEXTO BREVE
+
+
+El concreto es un material de construcción crítico. Su resistencia a la compresión determina si una estructura es segura y durable. Este dataset contiene 1,030 muestras de concreto con diferentes composiciones y edades, con el objetivo de predecir su resistencia final basado en sus ingredientes.
+
+
+📊 VARIABLES
+
+
+Variable Respuesta:
+Compressive Strength (Y) - Resistencia a la compresión en MPa (megapascales)
+
+
+Variables Predictoras :
+
+Cement (X₁) - Cantidad de cemento en kg/m³
+
+
+Blast Furnace Slag (X₂) - Cantidad de escoria en kg/m³
+
+
+Fly Ash (X₃) - Cantidad de ceniza volante en kg/m³
+
+
+Water (X₄) - Cantidad de agua en kg/m³
+
+
+Superplasticizer (X₅) - Cantidad de aditivo en kg/m³
+
+
+Coarse Aggregate (X₆) - Cantidad de grava en kg/m³
+
+
+Fine Aggregate (X₇) - Cantidad de arena en kg/m³
+
+
+Age (X₈) - Edad del concreto en días
+
+```{r, include=FALSE}
+library(knitr)
+library(kableExtra)
+library(readxl)
+library(tibble)
+library(readr)
+library(Amelia)
+library(ggplot2)
+library(tidyverse)
+library(reshape2)
+library(gridExtra)
+library(GGally)
+library(MAVE)
+library(ggplot2)
+library(ggpubr)
+```
+
+### Clasificacion de las variables
+
+```{r}
+tabla_variables <- data.frame(
+  Variable = c(
+    "Cement",
+    "Blast Furnace Slag",
+    "Fly Ash",
+    "Water",
+    "Superplasticizer",
+    "Coarse Aggregate",
+    "Fine Aggregate",
+    "Age",
+    "Compressive Strength"
+  ),
+  Tipo = c(
+    rep("Numérica continua", 7),
+    "Numérica discreta",
+    "Numérica continua"
+  ),
+  `Escala de Medición` = c(
+    rep("Razón", 8),
+    "Razón"
+  ),
+  check.names = FALSE
+)
+
+# Crear tabla formateada para bookdown
+kable(tabla_variables, 
+      caption = "Descripción de Variables del Dataset Concrete Compressive Strength",
+      booktabs = TRUE,
+      longtable = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                latex_options = c("striped", "hold_position"),
+                full_width = FALSE,
+                font_size = 10) %>%
+  column_spec(1, bold = TRUE, width = "3cm") %>%
+  column_spec(2, width = "3cm") %>%
+  column_spec(3, width = "2.5cm")
+```
+
+## Importacion del dataset y exploracion incial
+
+
+### Caracteristicas del dataset 
+
+```{r }
+data(Concrete)
+head(Concrete)
+dim(Concrete)
+colnames(Concrete)
+str(Concrete)
+
+```
+
+### Revision de valores faltantes 
+
+```{r}
+missmap(Concrete)
+```
+
+
+
+El dataset Concrete Compressive Strength contiene 1,030 observaciones de muestras de concreto obtenidas de experimentos de laboratorio, sin valores faltantes. Cuenta con 9 variables en total: 8 predictoras (7 numéricas continuas y 1 numérica discreta) y 1 variable respuesta numérica continua. Todas las variables tienen escala de medición de razón. Se trata de un dataset limpio y de alta calidad, con datos de origen controlado , siendo probablemente un prospecto óptimo para análisis de regresión lineal sin necesidad de transformaciones.
+
+
+
+
+
+
+

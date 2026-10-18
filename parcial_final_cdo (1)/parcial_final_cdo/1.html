@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ecuaciones</title>
+
+  <style>
+    :root{
+      --bg: #000000;       /* fondo negro */
+      --text: #2f2f2f;     /* gris muy oscuro */
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+    }
+
+    .container{
+      max-width:900px;
+      margin:40px auto;
+      padding:20px;
+    }
+
+    .equation{
+      margin: 22px 0;
+      padding: 14px;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+    }
+
+    .MathJax_SVG, .mjx-chtml {
+      color: var(--text) !important;
+      fill: var(--text) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="equation">
+      \[
+        \hat{\beta} = (X'X)^{-1}X'y
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+      \begin{aligned}
+        E(\hat{\beta}) &= E\big[(X'X)^{-1}X'y\big] \\
+                       &= E\big[(X'X)^{-1}X'(X\beta + \varepsilon)\big] \\
+                       &= E\big[(X'X)^{-1}X'X\beta + (X'X)^{-1}X'\varepsilon\big] \\
+                       &= E\big[\beta + (X'X)^{-1}X'\varepsilon\big] \\
+                       &= \beta + (X'X)^{-1}X' E(\varepsilon)
+      \end{aligned}
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(\varepsilon) = 0
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(\hat{\beta}) = \beta
+      \]
+    </div>
+
+  </div>
+
+  <!-- MathJax -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</body>
+</html>

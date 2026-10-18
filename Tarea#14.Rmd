@@ -1,0 +1,117 @@
+---
+title: "Tarea#14"
+output: html_document
+date: "2025-09-24"
+---
+
+
+## Cargar la data 
+
+
+```{r}
+library(tidyverse)
+df <- matrix(c(4, 1595,
+               4, 1399,
+               4, 1890,
+               3, 795,
+               2.5, 600,
+               4, 1995,
+               3, 1205,
+               2, 583,
+               3, 1048),
+             nrow = 9, byrow = TRUE,
+             dimnames = list(
+               c("S14", "Orinoco", "Outside Pro", "Explorer 380X", "River XK2", 
+                 "Sea Tiger", "Maverik II", "Starlite 100", "Fat Pack Cat"),
+               c("Capacidad_equipaje", "Precio")
+             ))
+```
+
+## Punto 1
+Trace el diagrama de dispersión de estos datos empleando la capacidad para equipaje como variable independiente.
+
+```{r}
+df %>% 
+  ggplot(mapping = aes( x = Capacidad_equipaje , y = Precio))+
+  geom_point()+
+  geom_smooth(formula = 'y~x', method = 'lm')+
+  theme_bw()
+
+```
+
+
+## Punto 2
+
+¿Qué indica el diagrama de dispersión del inciso a) respecto a la relación entre capacidad para equipaje y precio?
+
+Se puede ver una clara relacion lineal positiva en las dos variables lo que significa que a medida que una aumenta la otra tambien lo hace 
+
+## Punto 3
+
+el mismo que el 1 
+
+## Punto 4 
+
+Utilice el método de mínimos cuadrados para obtener la ecuación de regresión estimada.
+
+```{r}
+
+# 2. Variables
+X <- df[, "Capacidad_equipaje"]
+Y <- df[, "Precio"]
+n <- length(X)
+
+# 3. Medias
+x_bar <- mean(X)
+y_bar <- mean(Y)
+
+# 4. Cálculo de Sxx y Sxy
+Sxx <- sum((X - x_bar)^2)
+Sxy <- sum((X - x_bar) * (Y - y_bar))
+
+# 5. Estimadores de mínimos cuadrados
+beta1 <- Sxy / Sxx
+
+# 6. Estimador beta0
+beta0 <- y_bar - beta1 * x_bar
+
+# 7. Valores ajustados
+Y_hat <- beta0 + beta1 * X
+
+
+```
+
+## Punto 5
+
+Dé una interpretación de la pendiente de la ecuación de regresión estimada
+
+
+```{r}
+print(beta1)
+```
+
+Por cada unidad adicional de capacidad para equipaje, se espera que el precio del bote aumente en $ 638.7561, en promedio.
+
+
+## Punto 6 
+
+Diga cuál será el precio de un bote que tenga 3 en la evaluación de su capacidad para equipaje
+```{r}
+X_3<- 3
+Y_hat_3 <- beta0 + beta1 * X_3
+print(Y_hat_3)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

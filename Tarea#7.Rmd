@@ -1,0 +1,122 @@
+---
+title: "Tarea#1"
+output: html_document
+date: "2025-09-14"
+---
+
+
+## Carga de la data 
+
+
+```{r }
+df <- matrix(c(4.17, 96.97,
+                  10.04, 154.70,
+                  6.02, 151.61,
+                  1.52, 163.92,
+                  4.81, 147.82,
+                  7.70, 141.77,
+                  3.63, 179.18,
+                  4.65, 171.81,
+                  2.97, 200.23,
+                  1.57, 125.19,
+                  0.82, 120.49,
+                  1.57, 98.61,
+                  6.09, 196.67,
+                  3.08, 289.59,
+                  1.76, 105.71,
+                  3.09, 275.97,
+                  4.18, 95.83),
+                nrow = 17, byrow = TRUE,
+                dimnames = list(
+                  NULL,
+                  c("egresos", "ingresos")
+                ))
+```
+
+## Punto 1 
+
+Construya un diagrama de dispersión para visualizar la relación entre publicidad  
+x y ventas y
+ 
+
+```{r }
+library(tidyverse)
+library(readxl)
+df %>% 
+  ggplot(aes(x=egresos,y=ingresos))+
+  geom_point(color='blue', size = 3)+
+  geom_smooth(formula= y ~ x, method = 'lm', color ='red')+
+  theme_bw()
+
+```
+
+## Punto 2
+
+```{r}
+x <- df[,"egresos"] 
+y <- df[,"ingresos"] 
+n<- nrow(df)
+print(n)
+
+xbar<-mean(x)
+ybar<-mean(y)
+
+a<- x-xbar
+b<- y-ybar
+
+Sxy<- sum((a)*(b))
+Sxx<- sum((a)^2)
+Syy<- sum((b)^2)
+
+r <- Sxy/sqrt(Sxx*Syy)
+print(r)
+```
+## Punto 3 
+Plantee y contraste la hipótesis nula  
+H0:ρ=0
+  frente a la alternativa bilateral  
+H1:ρ≠0.
+Como nuestro n es menor a 25 usaremos un prubea t para estimar ρ
+```{r}
+t0 <- abs((r*sqrt(n-2))/(1-r^2))
+print(t0)
+gl <- n-2
+alpha = 0.05
+t_tab <- qt(1-alpha/2 , df = gl)
+print(t_tab)
+if(t0>t_tab){
+  print("Se rechaza H0")
+}else{
+  print("No se rechaza H0")
+}
+
+```
+
+## Punto 4 
+Interprete el resultado en términos de significancia estadística. 
+
+Con una significancia estadistica del 0.05 podemos afirmar que no hay ningun tipo de correlacion entre la variable egresos y ingresos 
+
+## Punto 5 
+Calcule e interprete el intervalo de confianza al 95% para el coeficiente de correlación poblacional.
+```{r}
+z <- atanh(r)
+alpha = 0.05
+l <- qnorm(1-alpha/2)
+s <- 1/sqrt(n-3)
+
+ci <- c(z-l*s,z+l*s )
+IC <- tanh(ci)
+print(IC)
+```
+El intervalo incluye el cero, lo que implica que ρ = 0 es un valor plausible bajo los datos observados.Entonces no hay relacion entre egresos y ingresos 
+
+
+
+
+
+
+
+
+
+

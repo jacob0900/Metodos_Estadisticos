@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ecuaciones</title>
+
+  <style>
+    :root{
+      --bg: #000000;
+      --text: #2f2f2f;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+    }
+
+    .container{
+      max-width:900px;
+      margin:40px auto;
+      padding:20px;
+    }
+
+    .equation{
+      margin: 22px 0;
+      padding: 14px;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+    }
+
+    .MathJax_SVG, .mjx-chtml {
+      color: var(--text) !important;
+      fill: var(--text) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="equation">
+      \[
+        E(MSE) = \sigma^2
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        y = X\beta + \varepsilon,\qquad E(\varepsilon)=0,\qquad Var(\varepsilon)=\sigma^2 I
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        H = X(X'X)^{-1}X'
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        e = y - \hat{y} = (I - H)y
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+      \begin{aligned}
+        e &= (I-H)(X\beta + \varepsilon)\\
+          &= (I-H)X\beta + (I-H)\varepsilon\\
+          &= (I-H)\varepsilon
+      \end{aligned}
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        SSE = e'(I-H)e
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        SSE = \varepsilon'(I-H)\varepsilon
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(SSE) = tr\left[(I-H)Var(\varepsilon)\right]
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        Var(\varepsilon) = \sigma^2 I
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(SSE) = \sigma^2\, tr(I-H)
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        tr(I-H) = n - tr(H)
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        tr(H) = rank(H) = p
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(SSE) = \sigma^2 (n - p)
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        MSE = \frac{SSE}{n-p}
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(MSE) = \frac{E(SSE)}{n-p} = \frac{\sigma^2(n-p)}{n-p} = \sigma^2
+      \]
+    </div>
+
+  </div>
+
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+---
+title: "Tarea#3"
+output: html_document
+date: "2025-09-16"
+---
+
+
+
+## Cargar data
+
+
+
+```{r }
+df <- matrix(c(5.52, 36.5,
+                  3.21, 27.2,
+                  4.32, 27.7,
+                  2.31, 28.3,
+                  4.30, 30.3,
+                  3.71, 29.7,
+                  2.75, 29.5,
+                  2.15, 26.3,
+                  4.41, 32.2),
+                nrow = 9, byrow = TRUE,
+                dimnames = list(
+                  NULL,
+                  c("peso", "volumen")
+                ))
+```
+
+## Punto 1 
+
+Calcule el coeficiente de correlación muestral r.
+
+```{r }
+x<- df[, "peso"]
+y<- df[, "volumen"]
+n<-nrow(df)
+print(n)
+xbar<- mean(x)
+ybar<- mean(y)
+
+a<- x-xbar
+b<- y-ybar
+
+Sxy<- sum(a*b)
+Sxx<- sum(a^2)
+Syy<- sum(b^2)
+
+r<- Sxy/sqrt(Sxx*Syy)
+
+print(r)
+
+
+
+```
+
+## Punto 2
+
+Pruebe la hipótesis nula H0:ρ=0 contra la alternativa  H1:ρ>0, con un nivel de significancia de 0.01.
+
+
+```{r}
+t0 <- abs(r*sqrt(n-2))/(sqrt(1-r^2))
+gl <- n-2
+alpha <- 0.01  
+t_tab <- qt(1-alpha, df = gl)  
+if(t0 > t_tab){
+  print("Se rechaza H0")
+}else{
+  print("No se rechaza H0")
+}
+```
+
+con una significancia estadistica del 0.01 podemos afirmar que hay una correlacion positiva entre el peso y el volumen 
+
+
+
+
+
+
+
+
+
+
+

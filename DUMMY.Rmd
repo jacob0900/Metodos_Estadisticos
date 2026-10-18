@@ -1,0 +1,83 @@
+---
+title: "DUMMY"
+output: html_document
+date: "2025-11-16"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Carga de datos:
+```{r}
+library(fst)
+df <- read_fst("C:/Users/santi/Downloads/taiwan_real_estate.fst")
+head(df)
+str(df)
+unique(df$house_age_years)
+```
+
+Se hace el rls:
+```{r}
+library(tidyverse)
+
+df %>% 
+  ggplot(aes(price_twd_msq)) +
+  geom_histogram(bins = 10) +
+  facet_wrap(vars(house_age_years))+
+  theme_bw()
+```
+
+Promedio por categpria:
+```{r}
+summary_stats <- df %>% 
+    group_by(house_age_years) %>% 
+    summarize(mean_by_group = mean(price_twd_msq))
+
+summary_stats
+```
+
+Como house_age_years es una variable categorica definida en R, de manera inmediata se obtiene la variable dummy:
+```{r}
+# Quitar el orden manteniendo los niveles
+df <- df %>%
+mutate(house_age_years = factor(house_age_years,
+levels = levels(house_age_years),
+ordered = FALSE))
+
+# Generar la matriz de diseño (variables dummy)
+matriz <- model.matrix(~ house_age_years, data = df)
+```
+
+```{r}
+# modelo price_twd_msq vs. house_age_years
+mdl_price_vs_age <- lm(
+    price_twd_msq ~ house_age_years, 
+    data = df
+)
+
+# resultado
+summary(mdl_price_vs_age)
+```
+
+(Intercept) = 12.6375: Representa el valor promedio esperado del precio por metro cuadrado (price_twd_msq) para viviendas en la categoría base (house_age_years = "0 to 15"). Es decir, una vivienda con antigüedad de 0 a 15 años tiene un precio medio aproximado de 12.64 TWD/m².
+
+house_age_years15 to 30 = -2.7607: Indica que, manteniendo todo lo demás constante, las viviendas con 15 a 30 años de antigüedad tienen un precio promedio 2.76 TWD/m² menor que las viviendas nuevas (0–15 años). El valor p (< 0.001) muestra que esta diferencia es altamente significativa estadísticamente.
+
+house_age_years30 to 45 = -1.2442: Indica que las viviendas con 30 a 45 años tienen, en promedio, un precio 1.24 TWD/m² menor que las viviendas nuevas. La diferencia también es significativa ( p<0.05 ).
+
+El modelo confirma una relación negativa entre la antigüedad y el precio de la vivienda: a medida que las viviendas son más antiguas, su precio promedio por metro cuadrado tiende a disminuir. Esto sugiere que el valor de las propiedades disminuye con la edad, aunque el efecto parece ser más fuerte entre 15 y 30 años, y luego se atenúa ligeramente en viviendas más antiguas.
+
+
+Hagamos el rlm:
+```{r}
+# modelo de rlm
+model <- lm(price_twd_msq ~ .,data = df)
+
+# resultado
+summary(model)
+```
+
+
+

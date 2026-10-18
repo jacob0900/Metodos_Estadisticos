@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Demostración</title>
+
+  <style>
+    :root{
+      --bg: #000000;
+      --text: #2f2f2f;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+    }
+
+    .container{
+      max-width:900px;
+      margin:40px auto;
+      padding:20px;
+    }
+
+    .equation{
+      margin: 22px 0;
+      padding: 14px;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+    }
+
+    .MathJax_SVG, .mjx-chtml {
+      color: var(--text) !important;
+      fill: var(--text) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Ecuación a demostrar -->
+    <div class="equation">
+      \[
+        E(z'Az) = \operatorname{tr}\!\big(A\,E(zz')\big)
+      \]
+    </div>
+
+    <!-- Demostración solo con ecuaciones -->
+    <div class="equation">
+      \[
+        z'Az = \operatorname{tr}(z'Az)
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        z'Az = \operatorname{tr}(Az z')
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(z'Az) = E\!\left[\operatorname{tr}(Azz')\right]
+      \]
+    </div>
+
+    <div class="equation">
+      \[
+        E(z'Az) = \operatorname{tr}\!\left(A\,E(zz')\right)
+      \]
+    </div>
+
+  </div>
+
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</body>
+</html>

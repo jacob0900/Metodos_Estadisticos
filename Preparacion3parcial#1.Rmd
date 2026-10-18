@@ -1,0 +1,173 @@
+---
+title: "Preparacion3parcial#1"
+output: html_document
+date: "2025-10-28"
+---
+
+
+
+
+## Cargar la data
+
+```{r }
+library(tidyverse)
+
+
+df <- data.frame(
+  volumen = c(0.01, 0.06, 0.58, 2.24, 15.55, 276.02),
+  porcentaje_ceniza = c(3.32, 4.05, 5.69, 7.06, 8.17, 9.36)
+)
+
+```
+
+
+
+
+## Punto 1
+Calcule la recta de mínimos cuadrados para predecir el porcentaje de ceniza (y) a partir del volumen (x). Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique
+
+
+```{r}
+
+## y es la que quieres predecir  y X con la que estimas 
+modelo1 <- lm(  porcentaje_ceniza~ volumen, data = df)
+print(modelo1)
+
+print("y= 5.57646 + x*0.01423")
+
+df %>% 
+ggplot(aes( volumen, porcentaje_ceniza)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: volumen vs. ceniza")+
+  theme_bw()
+```
+
+El modelo no sigue un modelo lineal por lo que tendremos que hacer una tranformacion 
+
+
+## Punto 2 
+
+Calcule la recta de mínimos cuadrados para predecir el porcentaje de ceniza a partir del logaritmo natural del volumen. Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique.
+
+```{r}
+modelo2 <- lm(porcentaje_ceniza ~ log(volumen), data = df)
+
+# Obtener coeficientes
+coef(modelo2)
+print( "ŷ = 6.1484169    + log(x)*0.6288792" )
+
+ 
+df %>% 
+ggplot(aes( log(volumen), porcentaje_ceniza)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: volumen vs. ceniza")+
+  theme_bw()
+
+
+
+```
+
+Se ve una clara relacion lineal por lo que este modelo es el adecuado 
+
+## Punto 3
+
+Calcule la recta de mínimos cuadrados para predecir el porcentaje de ceniza a partir de la raíz cuadrada del volumen. Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique.
+
+```{r}
+modelo3 <- lm(porcentaje_ceniza ~ sqrt(volumen), data = df)
+
+# Obtener coeficientes
+coef(modelo3)
+
+print("y=5.1716196  +   sqrt(x)*0.2858451")
+
+
+df %>% 
+ggplot(aes( sqrt(volumen), porcentaje_ceniza)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: volumen vs. ceniza")+
+  theme_bw()
+
+
+```
+
+El modelo no sigue un modelo lineal por lo que tendremos que hacer una tranformacion esta transformacion no nos sirve 
+
+
+## Punto 4 
+
+Utilizando el modelo más adecuado, pronostique el porcentaje de ceniza para partículas con un volumen de 50 m3.
+
+Por los resultados es evidente que el modelo ligaritmico es el que menos residuos aleatorios presenta
+```{r}
+pronostico_puntual <- predict(modelo2, newdata = data.frame(volumen = 50))
+pronostico_puntual
+```
+
+
+## Punto 5
+
+
+
+
+Utilizando el modelo más adecuado, construya un intervalo de confianza de 95% para la media de un porcentaje de ceniza para partículas con un volumen de 50 m3.
+
+
+```{r}
+
+x <- c(0.01, 0.06, 0.58, 2.24, 15.55, 276.02)
+y <- c(3.32, 4.05, 5.69, 7.06, 8.17, 9.36)
+n <- length(x)
+
+# Modelo logarítmico (por verificación)
+lm_b <- lm(y ~ log(x))
+
+# Coeficientes CORRECTOS del modelo2
+b0 <- 6.1484169
+b1 <- 0.6288792
+
+# Punto de interés
+x0 <- 50
+z0 <- log(x0)
+
+# valores z_i
+z <- log(x)
+z_bar <- mean(z)
+Szz <- sum((z - z_bar)^2)
+
+# residuos
+res <- resid(lm_b)
+RSS <- sum(res^2)
+s <- sqrt(RSS / (n - 2))
+
+# predicción puntual
+yhat0 <- b0 + b1 * z0
+
+# error estándar de la media predicha
+SE_mean <- s * sqrt(1/n + ((z0 - z_bar)^2) / Szz)
+
+# t crítico (df = n-2)
+t_crit <- qt(0.975, df = n - 2)
+
+# intervalo de confianza 95% para la media
+lower <- yhat0 - t_crit * SE_mean
+upper <- yhat0 + t_crit * SE_mean
+
+cat("yhat0 =", yhat0, "\nSE_mean =", SE_mean, "\nt_crit =", t_crit,
+    "\nIC95% = [", lower, ",", upper, "]\n")
+# Para intervalo de confianza de la MEDIA:
+ic_media <- predict(modelo2, newdata = data.frame(volumen = 50), 
+                   interval = "confidence", level = 0.95)
+### confidence es para la media
+print(ic_media)
+
+```
+
+
+
+
+
+

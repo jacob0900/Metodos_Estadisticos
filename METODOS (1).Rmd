@@ -1,0 +1,249 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-08-27"
+
+
+---
+# Comparación de medias entre dos grupos independientes
+# Prueba de igualdad de varianzas (manual)
+
+```{r}
+# Función manual para prueba F de igualdad de varianzas, vartest
+prueba_f_manual <- function(x, y, alpha = 0.05) {
+  n1 <- length(x)
+  n2 <- length(y)
+  var1 <- var(x)
+  var2 <- var(y)
+  
+  # Estadístico F (siempre mayor o igual a 1)
+  if (var1 >= var2) {
+    F_est <- var1 / var2
+    df1 <- n1 - 1
+    df2 <- n2 - 1
+  } else {
+    F_est <- var2 / var1
+    df1 <- n2 - 1
+    df2 <- n1 - 1
+  }
+  
+  # Valor p bilateral
+  p_valor <- 2 * min(pf(F_est, df1, df2), 1 - pf(F_est, df1, df2))
+  
+  # Decisión
+  decision <- ifelse(p_valor < alpha, 
+                    "Rechazar H0: Las varianzas son diferentes",
+                    "No rechazar H0: No hay evidencia de diferencias en varianzas")
+  
+  # Intervalo de confianza
+  F_inf <- F_est / qf(1 - alpha/2, df1, df2)
+  F_sup <- F_est * qf(1 - alpha/2, df2, df1)
+  
+  return(list(
+    estadistico_F = F_est,
+    grados_libertad = c(df1, df2),
+    p_valor = p_valor,
+    decision = decision,
+    intervalo_confianza = c(F_inf, F_sup),
+    razon_varianzas = var1/var2
+  ))
+}
+
+# Ejemplo de uso
+resultado_f <- prueba_f_manual(na.omit(df$Empleados), na.omit(df$Agricultores))
+print(resultado_f)
+var.test(na.omit(df$Empleados),na.omit(df$Agricultores))
+```
+
+Interpretación: Si p-valor < 0.05, rechazamos H0, lo que significa que las varianzas son diferentes y debemos usar el t-test de Welch.
+
+
+# t-test para muestras independientes (manual)
+
+```{r}
+# t-test para muestras independientes (manual)
+t_test_manual <- function(x, y, var_equal = FALSE, alpha = 0.05) {
+  n1 <- length(x)
+  n2 <- length(y)
+  mean1 <- mean(x)
+  mean2 <- mean(y)
+  var1 <- var(x)
+  var2 <- var(y)
+  
+  if (var_equal) {
+    # Varianzas iguales
+    var_pooled <- ((n1-1)*var1 + (n2-1)*var2) / (n1 + n2 - 2)
+    se <- sqrt(var_pooled * (1/n1 + 1/n2))
+    df <- n1 + n2 - 2
+  } else {
+    # Varianzas diferentes (Welch)
+    se <- sqrt(var1/n1 + var2/n2)
+    df <- (var1/n1 + var2/n2)^2 / ((var1/n1)^2/(n1-1) + (var2/n2)^2/(n2-1))
+  }
+  
+  # Estadístico t
+  t_est <- (mean1 - mean2) / se
+  
+  # Valor p (bilateral)
+  p_valor <- 2 * pt(-abs(t_est), df)
+  
+  # Intervalo de confianza
+  t_critico <- qt(1 - alpha/2, df)
+  margen_error <- t_critico * se
+  ic_inf <- (mean1 - mean2) - margen_error
+  ic_sup <- (mean1 - mean2) + margen_error
+  
+  # Decisión
+  decision <- ifelse(p_valor < alpha,
+                    "Rechazar H0: Diferencias significativas",
+                    "No rechazar H0: No hay diferencias significativas")
+  
+  return(list(
+    estadistico_t = t_est,
+    grados_libertad = df,
+    p_valor = p_valor,
+    diferencia_medias = mean1 - mean2,
+    intervalo_confianza = c(ic_inf, ic_sup),
+    decision = decision
+  ))
+}
+
+# Ejemplo de uso
+resultado_t <- t_test_manual(dfps$Valores, dfpd$Valores, var_equal = TRUE)
+print(resultado_t)
+```
+Interpretación: Si p-valor < 0.05, rechazamos H0, lo que indica diferencias significativas entre las medias.
+
+# Tamaño del efecto (Cohen's d manual)
+
+```{r}
+# Cohen's d manual
+cohen_d_manual <- function(x, y) {
+  n1 <- length(x)
+  n2 <- length(y)
+  mean1 <- mean(x)
+  mean2 <- mean(y)
+  var1 <- var(x)
+  var2 <- var(y)
+  
+  # Desviación estándar pooled
+  sd_pooled <- sqrt(((n1-1)*var1 + (n2-1)*var2) / (n1 + n2 - 2))
+  
+  # Cohen's d
+  d <- abs(mean1 - mean2) / sd_pooled
+  
+  # Interpretación
+  magnitud <- ifelse(d < 0.2, "Despreciable",
+                    ifelse(d < 0.5, "Pequeño",
+                          ifelse(d < 0.8, "Mediano", "Grande")))
+  
+  return(list(
+    cohen_d = d,
+    interpretacion = magnitud
+  ))
+}
+
+# Ejemplo de uso
+tamano_efecto <- cohen_d_manual(dfps$Valores, dfpd$Valores)
+print(tamano_efecto)
+```
+# Comparación de medias pareadas
+## t-test para muestras pareadas (manual)
+NO ES NECESARIO QUE HAYA IGUALDAD DE VARIANZA
+```{r}
+# t-test para muestras pareadas (manual)
+t_test_pareado_manual <- function(x, y, alpha = 0.05) {
+  # Verificar que tienen el mismo length
+  if (length(x) != length(y)) {
+    stop("Las muestras deben tener el mismo tamaño")
+  }
+  
+  diferencias <- x - y
+  n <- length(diferencias)
+  mean_diff <- mean(diferencias)
+  sd_diff <- sd(diferencias)
+  se_diff <- sd_diff / sqrt(n)
+  
+  # Estadístico t
+  t_est <- mean_diff / se_diff
+  df <- n - 1
+  
+  # Valor p (bilateral)
+  p_valor <- 2 * pt(-abs(t_est), df)
+  
+  # Intervalo de confianza
+  t_critico <- qt(1 - alpha/2, df)
+  margen_error <- t_critico * se_diff
+  ic_inf <- mean_diff - margen_error
+  ic_sup <- mean_diff + margen_error
+  
+  # Decisión
+  decision <- ifelse(p_valor < alpha,
+                    "Rechazar H0: Diferencias significativas",
+                    "No rechazar H0: No hay diferencias significativas")
+  
+  return(list(
+    estadistico_t = t_est,
+    grados_libertad = df,
+    p_valor = p_valor,
+    media_diferencias = mean_diff,
+    intervalo_confianza = c(ic_inf, ic_sup),
+    decision = decision
+  ))
+}
+
+# Ejemplo de uso
+resultado_pareado <- t_test_pareado_manual(datos$antes, datos$despues)
+print(resultado_pareado)
+```
+
+
+#NO PARAMETRICA
+```{r}
+# Solo uso de función predefinida para ejemplo
+wilcox_result <- wilcox.test(weight ~ smoke, data = df, paired = FALSE)
+```
+Interpretación: Si p-valor < 0.05, rechazamos H0. Esto indica que las distribuciones de los dos grupos son diferentes. No necesariamente significa diferencia de medianas, sino diferencia en la ubicación general.
+```{r}
+wilcox_pareado <- wilcox.test(datos$antes, datos$despues, paired = TRUE)
+```
+Interpretación: Si p-valor < 0.05, rechazamos H0. Indica que las diferencias entre pares no están centradas en cero, sugiriendo un efecto del tratamiento.
+NO ES NECESARIO QUE HAYA IGUALDAD DE VARIANZA
+# ES COMO ANOVA PARA NO PARAMETRICA
+```{r}
+kruskal_result <- kruskal.test(Calificaciones ~ Grupo, data = datos)
+```
+Interpretación: Si p-valor < 0.05, rechazamos H0. Indica que al menos un grupo tiene una distribución diferente de los otros.
+
+Resumen de criterios de decisión:
+Valor p < α (0.05): Rechazar hipótesis nula (H0)
+
+Valor p ≥ α: No rechazar hipótesis nula
+
+Intervalo de confianza: Si no incluye el cero, hay diferencias significativas
+
+Tamaño del efecto:
+
+d < 0.2: Despreciable
+
+0.2 ≤ d < 0.5: Pequeño
+
+0.5 ≤ d < 0.8: Mediano
+
+d ≥ 0.8: Grande
+
+# Parametricas en R
+```{r}
+# Recorrer del 1 al 5
+for(i in 1:5) {
+  print(paste("Iteración:", i))
+}
+
+# Resultado:
+# [1] "Iteración: 1"
+# [1] "Iteración: 2"
+# [1] "Iteración: 3"
+# [1] "Iteración: 4"
+# [1] "Iteración: 5"
+```
+

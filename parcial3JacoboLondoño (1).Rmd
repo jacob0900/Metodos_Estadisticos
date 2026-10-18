@@ -1,0 +1,276 @@
+---
+title: "parcial3JacoboLondoño"
+output: html_document
+date: "2025-10-29"
+---
+
+
+# Punto 2
+
+## Cargar la data 
+
+```{r,include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(car)
+library(lmtest)
+library(ggplot2)
+
+```
+
+
+```{r }
+
+
+df <- data.frame(
+  VMP = c(1.4, 15.7, 2.54, 1.14, 0.889, 1.65, 1.4, 1.02, 4.57, 6.6, 1.02, 3.94, 1.4, 1.4),
+  distancia_escalada  = c(47.33, 9.6, 15.8, 24.3, 23.0, 16.3, 39.8, 29.94, 10.9, 8.63, 28.64, 18.21, 33.0, 34.0),
+  check.names = FALSE
+)
+```
+
+## a
+
+
+
+```{r }
+modelo1 <- lm(  VMP ~ distancia_escalada, data = df)
+print(modelo1)
+
+print("y=8.0623-x*0.2009+ϵ")
+
+df %>% 
+ggplot(aes( distancia_escalada, VMP)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: distancia vs VMP ")+
+  theme_bw()
+```
+
+
+
+## b
+
+```{r}
+modelo2 <- lm(  log( VMP) ~ log(distancia_escalada), data = df)
+print(modelo2)
+
+print("ln(y)=4.662-ln(x)*1.280+ϵ")
+
+df %>% 
+ggplot(aes( log(distancia_escalada), log( VMP))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: distancia vs VMP con transformacion logaritmica ")+
+  theme_bw()
+```
+
+
+## c
+
+me parece que el segundo modelo presenta un compartamiento mas lineal que el primero por lo que el segundo es el mas adecuado 
+
+## d
+```{r}
+predict(modelo2,newdata = data.frame(distancia_escalada  = 20), interval = "prediction")
+
+```
+
+## e
+
+
+
+
+
+
+# Punto 3
+
+##    Cargar la data 
+
+```{r}
+
+
+df1<- data.frame(
+  x  = c(10.20, 5.03, 8.84, 6.62, 2.89, 2.31, 7.13, 3.40, 5.57, 7.23, 2.12, 1.67, 5.33, 16.70, 9.75, 2.74, 2.58, 1.50),
+  y = c(2.6, 19.9, 0.8, 5.3, 20.3, 39.4, 5.8, 29.4, 2.2, 5.5, 33.1, 44.2, 13.1, 0.6, 2.2, 16.9, 35.5, 48.0),
+  check.names = FALSE
+)
+```
+
+
+## a
+
+```{r}
+modelo3<- lm(  y~ x, data=df1)
+print(modelo3)
+
+print("y=36.632  -3.293*x+e")
+
+df1%>% 
+ggplot(aes( x, y )) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: distancia vs VMP ")+
+  theme_bw()
+```
+
+
+
+## b
+
+```{r}
+
+#df$residuos <- resid(modelo1)
+                     
+df1$residuos <- resid(modelo3)
+
+  plot_data <- data.frame(
+    Ajustados = fitted(modelo3),
+    Residuales = df1$residuos
+  )
+  
+  print(
+    ggplot(plot_data, aes(x = Ajustados, y = Residuales)) +
+      geom_point(size = 3, alpha = 0.7) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      geom_smooth(method = "loess", se = FALSE, color = "blue") +
+      labs(title = "Residuales vs Valores Ajustados - Verificación Homocedasticidad",
+           x = "Valores Ajustados", y = "Residuales") +
+      theme_bw()
+  )
+```
+
+El modelo no cuenta con compartamiento lineal por lo que no es el adecuado 
+
+
+## c
+```{r}
+
+
+modelo4<- lm(  y~ 1/x,data = df1)
+print(modelo4)
+
+
+
+df1%>% 
+ggplot(aes(1/x,y )) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: distancia vs VMP ")+
+  theme_bw()
+```
+
+
+## D
+```{r}
+predict(modelo4,  newdata = data.frame(x =5), interval = "prediction")
+```
+
+
+
+
+
+## e
+```{r}
+verificar_supuestos_texto <- function(modelo3){
+  
+  cat("=== VERIFICACIÓN DE SUPUESTOS (Basado en texto proporcionado) ===\n\n")
+  
+  # Extraer residuos
+  r <- residuals(modelo3) 
+  
+  # 1. INDEPENDENCIA (Sección 7.8.2 del texto)
+  cat("1. INDEPENDENCIA:\n")
+  # Prueba de Durbin-Watson (mencionada en el texto)
+  if(require(car)) {
+    dw_test <- car::durbinWatsonTest(modelo3)
+    cat("   Prueba Durbin-Watson:\n")
+    cat("   Estadístico D-W =", round(dw_test$dw, 4), "\n")
+    cat("   p-value =", round(dw_test$p, 4), "\n")
+    if(dw_test$p > 0.05) {
+      cat("   ✓ No se rechaza H0: Los errores son independientes\n")
+    } else {
+      cat("   ✗ Se rechaza H0: Los errores NO son independientes\n")
+    }
+  }
+  
+  # Gráfico ACF (mencionado en el texto)
+  acf(r, main = "Función de Autocorrelación (ACF) de los residuales")
+  
+  # 2. NORMALIDAD (Sección 7.8.3 del texto)
+  cat("\n2. NORMALIDAD:\n")
+  # Prueba de Shapiro-Wilk (mencionada en el texto)
+  shapiro_test <- shapiro.test(r)
+  cat("   Prueba Shapiro-Wilk:\n")
+  cat("   W =", round(shapiro_test$statistic, 4), "\n")
+  cat("   p-value =", round(shapiro_test$p.value, 4), "\n")
+  if(shapiro_test$p.value > 0.05) {
+    cat("   ✓ No se rechaza H0: Los errores siguen distribución normal\n")
+  } else {
+    cat("   ✗ Se rechaza H0: Los errores NO siguen distribución normal\n")
+  }
+  
+  # Gráfico Q-Q (mencionado en el texto)
+  car::qqPlot(r, main = "Gráfico Q-Q de los residuales")
+  
+  # 3. MEDIA CERO (Sección 7.8.4 del texto)
+  cat("\n3. MEDIA CERO:\n")
+  media_residuos <- mean(r)
+  cat("   Media de los residuos =", format(media_residuos, scientific = FALSE), "\n")
+  # Prueba t de una muestra (mencionada en el texto)
+  t_test <- t.test(r, mu = 0)
+  cat("   Prueba t: p-value =", round(t_test$p.value, 4), "\n")
+  if(t_test$p.value > 0.05) {
+    cat("   ✓ No se rechaza H0: La media de los errores es cero\n")
+  } else {
+    cat("   ✗ Se rechaza H0: La media de los errores NO es cero\n")
+  }
+  
+  # 4. HOMOCEDASTICIDAD (Sección 7.8.5 del texto)
+  cat("\n4. HOMOCEDASTICIDAD (Varianza constante):\n")
+  # Prueba de Breusch-Pagan (mencionada en el texto)
+  if(require(lmtest)) {
+    bp_test <- lmtest::bptest(modelo3)
+    cat("   Prueba Breusch-Pagan:\n")
+    cat("   BP =", round(bp_test$statistic, 4), "\n")
+    cat("   p-value =", round(bp_test$p.value, 4), "\n")
+    if(bp_test$p.value > 0.05) {
+      cat("   ✓ No se rechaza H0: La varianza es constante\n")
+    } else {
+      cat("   ✗ Se rechaza H0: La varianza NO es constante\n")
+    }
+  }
+  
+  # Gráfico de residuos vs ajustados (mencionado en el texto)
+  plot_data <- data.frame(
+    Ajustados = fitted(modelo3),
+    Residuales = r
+  )
+  
+  print(
+    ggplot(plot_data, aes(x = Ajustados, y = Residuales)) +
+      geom_point(size = 3, alpha = 0.7) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      geom_smooth(method = "loess", se = FALSE, color = "blue") +
+      labs(title = "Residuales vs Valores Ajustados - Verificación Homocedasticidad",
+           x = "Valores Ajustados", y = "Residuales") +
+      theme_bw()
+  )
+  
+  cat("\n=== RESUMEN FINAL ===\n")
+  cat("Basado en la verificación, el modelo3", 
+      ifelse(bp_test$p.value > 0.05 & dw_test$p > 0.05 & shapiro_test$p.value > 0.05,
+             "CUMPLE", "NO CUMPLE"), 
+      "con los supuestos de los errores.\n")
+}
+
+# USAR LA FUNCIÓN
+verificar_supuestos_texto(modelo3)
+```
+
+
+
+
+
+

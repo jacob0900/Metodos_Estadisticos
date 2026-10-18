@@ -1,0 +1,81 @@
+---
+title: "Tarea#6"
+output: html_document
+date: "2025-09-18"
+---
+## Cargar la data
+```{r}
+library(readr)
+library(tidyverse)
+df <- read_csv("C:/Users/jacob/OneDrive/Escritorio/Persona,Peso,BP sistólica.txt")
+head(df)
+
+```
+
+## Punto 1
+Estime el coeficiente de correlación.
+```{r }
+n<- nrow(df)
+print(n)
+x<- df$Peso
+y<- df$`BP sistólica`
+xbar<-mean(x)
+ybar<-mean(y)
+a<- x-xbar
+b<- y-ybar
+Sxy<-sum(a*b)
+Sxx<- sum(a^2)
+Syy<-sum(b^2)
+r<- Sxy/sqrt(Sxx*Syy)
+print(r)
+```
+
+## Punto 2
+
+Pruebe la hipótesis  H0:ρ=0.
+```{r}
+t0<-abs(r*sqrt(n-2)/sqrt(1-r^2))
+gl<- n-2
+alpha = 0.05
+t_crit<- qt(1-alpha/2, df = gl)
+if(t0>t_crit){
+  print("Se rechaza H0")
+}else{
+  print("No se rechaza H0")
+}
+```
+Con una significancia estadistica del 0.05 podemos afirmar que hay una corelacion lineal entre las variables
+
+## Punto 3
+
+Pruebe la hipótesis H0:ρ=0.6
+```{r}
+rho0<-0.6
+t<- abs((r - rho0) / sqrt((1 - rho0^2) / (n - 2)))
+if(t>t_crit){
+  print("Se rechaza H0")
+}else{
+  print("No se rechaza H0")
+}
+```
+Con una significancia estadistica del 0.05 podemos afirmar que hay una corelacion lineal entre las variables del 0.6
+
+## Punto 4
+
+Determine un intervalo de confianza al 95% para ρ
+```{r}
+Z0<- qnorm(1-alpha/2)
+s<- atanh(r)
+l<- 1/sqrt(n-3)
+c0<-c(s-Z0*l,s+Z0*l)
+IC<-tanh(c0)
+print(IC)
+```
+
+Este es el coeficiente poblacional con una significancia estadistica del 0.05
+
+
+
+
+
+

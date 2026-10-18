@@ -1,0 +1,1057 @@
+---
+title: "Ejercicios"
+output: html_document
+date: "2025-10-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Ejercicio 1 
+- Carga del dataset.
+```{r}
+# Datos
+volumen <- c(0.01, 0.06, 0.58, 2.24, 15.55, 276.02)
+ceniza <- c(3.32, 4.05, 5.69, 7.06, 8.17, 9.36)
+
+df1 <- data.frame(volumen, ceniza)
+df1
+
+# Insesgadez de β̂1
+# 
+# Fórmulas:
+# β̂1 = Sxy / Sxx
+# Sxy = Σ(xi - x̄)(yi - ȳ)
+# Sxx = Σ(xi - x̄)²
+
+# Demostración:
+# Σ(xi - x̄) = 0
+# Sustituyendo yi = β0 + β1xi + εi
+
+# β̂1 = [Σ(xi - x̄)yi] / Sxx
+#      = [Σ(xi - x̄)(β0 + β1xi + εi)] / Sxx
+#      = β0 Σ(xi - x̄)/Sxx + β1 Σ(xi - x̄)xi/Sxx + Σ(xi - x̄)εi/Sxx
+# Como Σ(xi - x̄) = 0 y Σ(xi - x̄)xi = Sxx:
+# β̂1 = β1 + [Σ(xi - x̄)εi] / Sxx.
+```
+
+- a). Calcule la recta de mínimos cuadrados para predecir el porcentaje de ceniza (y) a partir del volumen (x). Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique.
+
+Grafica original:
+```{r}
+df1 %>% 
+ggplot(aes(volumen, ceniza)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: distancia vs. precio")+
+  theme_bw()
+
+# Tomando esperanza condicional:
+# E[β̂1 | X] = β1 + (Σ(xi - x̄)E[εi]) / Sxx
+# Como E[εi] = 0, entonces:
+# E[β̂1 | X] = β1
+# Por lo tanto:
+# E(β̂1) = β1  →  β̂1 es insesgado
+```
+
+No es el mas adecuado ya que vemos que hay datos muy dispersos sobre la recta, por lo tanto, no es lineal.
+
+Ajustamos el modelo:
+```{r}
+modelo1 <- lm(ceniza ~ volumen, data = df1)
+summary(modelo1)
+```
+
+Grafico de residuos.
+```{r}
+df_residuos1 <- data.frame(
+  Ajustados = fitted(modelo1),
+  Residuos = residuals(modelo1)
+)
+
+ggplot(df_residuos1, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo original)") +
+  theme_bw()
+
+```
+
+- b). Calcule la recta de mínimos cuadrados para predecir el porcentaje de ceniza a partir del logaritmo natural del volumen. Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique.
+
+```{r}
+df1 %>% 
+  ggplot(aes(log(volumen), ceniza)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Transformacion logaritmica")+
+  theme_bw()
+```
+
+Este modelo si parece el adecuado ya que los puntos se acercan mas a al recta, los puntos siguen mejor la línea de regresión después de la transformación.
+
+- Ajustamos el modelo:
+```{r}
+modelo2 <- lm(ceniza ~ log(volumen), data = df1)
+summary(modelo2)
+```
+
+Grafico de residuos.
+```{r}
+df_residuos2 <- data.frame(
+  Ajustados = fitted(modelo2),
+  Residuos = residuals(modelo2)
+)
+
+ggplot(df_residuos2, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (log(volumen))") +
+  theme_bw()
+
+```
+
+- c). Calcule la recta de mínimos cuadrados para predecir el porcentaje de ceniza a partir de la raíz cuadrada del volumen. Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique.
+
+```{r}
+df1 %>% 
+  ggplot(aes(sqrt(volumen), ceniza)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Transformacion a raiz cuadrada")+
+  theme_bw()
+```
+
+No es la mas adecuada ya que los puntos no siguen la linea de regresion despuesd de la transformacion.
+
+- Ajustamos el modelo
+```{r}
+modelo3 <- lm(ceniza ~ sqrt(volumen), data = df1)
+summary(modelo3)
+```
+
+- d). Utilizando el modelo más adecuado, pronostique el porcentaje de ceniza para partículas con un volumen de 50 m3.
+
+```{r}
+predict(modelo2, newdata = data.frame(volumen = 50), interval = "prediction")
+predict(modelo2, newdata = data.frame(volumen = 50), interval = "confidence")
+
+```
+
+
+# Ejercicio 2
+- Carga del dataset
+```{r}
+
+temp <- c(30, 32, 35, 34, 31, 27, 33, 34, 25, 38, 39, 30, 30, 39, 40, 44, 34, 43, 34, 41, 37, 42, 41, 28)
+produccion <- c(49.2, 55.3, 53.4, 59.9, 51.4, 52.1, 60.2, 60.5, 59.3, 64.5, 68.2, 56.0, 58.3, 70.8, 71.6, 73.0, 65.9, 75.2, 69.5, 78.6, 72.0, 80.2, 76.3, 69.5)
+
+df2 <- data.frame(temp, produccion)
+df2
+
+#  Insesgadez de β̂0
+# 
+# Sabemos que β̂0 = ȳ - β̂1x̄
+# E[β̂0 | X] = E[ȳ | X] - E[β̂1 | X]x̄
+# Sustituyendo ȳ = β0 + β1x̄:
+# E[β̂0 | X] = (β0 + β1x̄) - β1x̄
+# E[β̂0 | X] = β0
+# Por tanto:
+# E(β̂0) = β0  →  β̂0 es insesgado.
+```
+
+- a). Calcule la recta de mínimos cuadrados para predecir la producción (y) de temperatura (x).
+
+```{r}
+df2 %>% 
+ggplot(aes(produccion, temp)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: distancia vs. precio")+
+  theme_bw()
+```
+
+- b). Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado? Explique.
+
+```{r}
+modelo2 <- lm(produccion ~ temp, data = df2)
+summary(modelo2)
+```
+
+```{r}
+df_residuos2 <- data.frame(
+  Ajustados = fitted(modelo2),
+  Residuos = residuals(modelo2)
+)
+
+ggplot(df_residuos2, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo original)") +
+  theme_bw()
+```
+
+Los puntos están dispersos de forma aleatoria alrededor de la linea roja, por lo tanto, no se aprecia una forma curva ni una tendencia creciente o decreciente. Entonces el modelo se ajusta a la relacion, parece ser el mas adecuado.
+
+
+- c). Grafique los residuos contra el orden en el que se hicieron las observaciones. ¿Hay una tendencia en los residuos con el tiempo? ¿El modelo lineal parece adecuado? Explique.
+
+```{r}
+df_residuos2 <- data.frame(
+  Orden = 1:length(residuals(modelo2)),
+  Residuos = residuals(modelo2)
+)
+ggplot(df_residuos2, aes(x = Orden, y = Residuos)) +
+  geom_point() +
+  geom_line() +  
+  geom_hline(yintercept = 0, color = "red") +
+  labs(
+    title = "Residuos vs orden de observaciones",
+    x = "Orden de observación",
+    y = "Residuos"
+  ) +
+  theme_bw()
+
+```
+
+A pesar de que el modelo lineal para la grafica de residuos vs valores ajustados sea razonablemente adecuado, en la grafica de residuos vs orden de observaciones, se aprecia una tendencia ascendente, lo que sugiere la presencia de dependencia de los errores, tocaria analizar los supuestos.
+
+- d). Verifique si cumple o no los supuestos de los errores.
+
+Supuesto de independencia:
+```{r}
+# Recordar si p_valor > 0.05 no se rechaza, si p_valor < se rechaza
+r <- residuals(modelo2)
+car::durbinWatsonTest(modelo2)  
+acf(r)                          
+```
+
+Como nuestro p-valor es 0, se rechaza H0, por lo tanto, hay autorrelacion.
+Como algunas barras se salen de las lineas azules, hay evidencia de autocorrelacion.
+
+
+Supuesto de normalidad:
+```{r}
+shapiro.test(r)
+
+qqnorm(r, main= 'Grafico de normalidad')
+qqline(r, col='blue')
+```
+
+El p-valor calculado es mayor que alpha, por lo tanto no se rechaza H0. Los residuos son normales. 
+En cuanto a la grafica los puntos se alinean sobre la linea azul, entonces hay normalidad.
+
+Supuesto de media cero:
+```{r}
+mean(r)
+t.test(r, mu = 0)
+```
+
+El p-valor es 1, por lo tanto es mayor que alpha, entonces no se rechaza H0, por lo tanto, la media de los errores es 0 cumpliendo el supuesto de media nula.
+
+Supuesto de homocedasticidad:
+```{r}
+require(lmtest)
+lmtest:::bptest(modelo2)
+```
+
+Por ultimo nuestro p-valor fue mayor que alpha, entonces se concluye que hay homocedasticidad.
+
+
+
+# Ejercicio 3.
+- Carga del dataset.
+```{r}
+VMP <- c(1.4, 15.7, 2.54, 1.14, 0.889, 1.65, 1.4, 1.02, 4.57, 6.6, 1.02, 3.94, 1.4, 1.4)
+Distancia <- c(47.33, 9.6, 15.8, 24.3, 23.0, 16.3, 39.8, 29.94, 10.9, 8.63, 28.64, 18.21, 33.0, 34.0)
+
+df3 <- data.frame(VMP, Distancia)
+df3
+
+# 3️ Varianza de β̂1
+# 
+# β̂1 = β1 + [Σ(xi - x̄)εi] / Sxx
+# Var(β̂1 | X) = Var(Σ(xi - x̄)εi / Sxx | X)
+# Como Var(aZ) = a²Var(Z):
+# Var(β̂1 | X) = (1/Sxx²) Var(Σ(xi - x̄)εi | X)
+
+```
+
+- a). Grafique la VMP contra la distancia escalada. ¿La relación parece ser lineal?
+
+```{r}
+df3 %>%
+  ggplot(aes(x = Distancia, y = VMP)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Relación original: VMP vs Distancia escalada",
+    x = "Distancia escalada",
+    y = "VMP (mm/s)"
+  ) +
+  theme_bw()
+
+```
+
+Este modelo no parece lineal ya que los valores de VMP varian demasiado.
+
+- b). Calcule la recta de mínimos cuadrados para el modelo  ln(VMP)=β0+β1ln(distancia escalada)+ϵ . Grafique los residuos contra los valores ajustados. ¿Este modelo lineal parece adecuado?
+
+Ajustamos el modelo:
+```{r}
+modelo_vmp <- lm(log(VMP) ~ log(Distancia), data = df3)
+summary(modelo_vmp)
+
+# Los errores son independientes, E(εi)=0, Var(εi)=σ²:
+# Var(Σ(xi - x̄)εi | X) = Σ(xi - x̄)²Var(εi)
+#                       = σ² Σ(xi - x̄)² = σ²Sxx
+
+# Sustituyendo:
+# Var(β̂1 | X) = (1/Sxx²)(σ²Sxx) = σ² / Sxx
+# Por tanto:
+# Var(β̂1) = σ² / Sxx
+```
+
+Grafica de los residuos:
+```{r}
+df_res <- data.frame(
+  Ajustados = fitted(modelo_vmp),
+  Residuos = residuals(modelo_vmp)
+)
+
+ggplot(df_res, aes(x = Ajustados, y = Residuos)) +
+  geom_point(color = "darkgreen", size = 2) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Residuos vs valores ajustados (modelo log-log)") +
+  theme_bw()
+
+```
+
+Parece adecuado ya que los residuos se distribuyen aleatoriarmente alrededor del 0 sin patron visible.
+
+
+- c). Utilice la recta de mínimos cuadrados calculada en el inciso (b) para predecir la VMP cuando la distancia escalada es 20. Determine un intervalo de predicción de 95%.
+
+```{r}
+predict(modelo_vmp, newdata = data.frame(Distancia = 20), interval = "prediction")
+predict(modelo_vmp, newdata = data.frame(Distancia = 20), interval = "confidence")
+```
+
+- d). Verifique si cumple o no los supuestos de los errores.
+
+Supuesto de independencia:
+```{r}
+# Recordar si p_valor > 0.05 no se rechaza, si p_valor < se rechaza
+r <- residuals(modelo_vmp)
+car::durbinWatsonTest(modelo_vmp)  
+acf(r)                          
+```
+
+El p-valor es mayor que alpha, por lo tanto, no hay autocorrelacion.
+
+Supuesto de normalidad:
+```{r}
+shapiro.test(r)
+
+qqnorm(r, main= 'Grafico de normalidad')
+qqline(r, col='blue')
+```
+
+En la normalidad el p-valor es mayor que alpha, entonces los errores siguen una distribuccion normal.
+
+Supuesto de media cero:
+```{r}
+mean(r)
+t.test(r, mu = 0)
+```
+
+En el supuesto de media cero el p-valor es mayor que alpha, por lo tanto, los errores tienen media cero, no se rechaza H0.
+
+Supuesto de homocedasticidad:
+```{r}
+require(lmtest)
+lmtest:::bptest(modelo_vmp)
+```
+
+Por ultimo en homocedasticidad el p-valor es menor que alpha, entonces se rechaza H0, no hay homocedasticidad.
+
+
+# Ejercicio 4
+- Carga del dataset.
+
+```{r}
+horas_persona <- c(939, 5796, 289, 283, 138, 2698, 663, 1069, 6945, 4159, 1266, 1481, 4716)
+costo <- c(251, 4690, 124, 294, 138, 1385, 345, 355, 5253, 1177, 802, 945, 2327)
+
+df4 <- data.frame(horas_persona, costo)
+df4
+
+# 4️ Varianza de β̂0
+# 
+# β̂0 = ȳ - β̂1x̄
+# Var(β̂0 | X) = Var(ȳ - β̂1x̄ | X)
+#              = Var(ȳ | X) + x̄²Var(β̂1 | X) - 2x̄Cov(ȳ, β̂1 | X)
+
+# Como Cov(ȳ, β̂1 | X) = 0:
+# Var(β̂0 | X) = Var(ȳ | X) + x̄²Var(β̂1 |
+```
+
+- a). Calcule la recta de mínimos cuadrados para predecir y a partir de x.
+
+```{r}
+df4 %>%
+  ggplot(aes(x = costo, y = horas_persona)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Relación original: costo vs horas_persona",
+    x = "Costo",
+    y = "Horas"
+  ) +
+  theme_bw()
+```
+
+- b). Grafique los residuos contra los valores ajustados. ¿El modelo parece adecuado?
+
+Ajustamos el modelo:
+```{r}
+modelo_costo <- lm(costo ~ horas_persona, data = df4)
+summary(modelo_costo)
+
+# Sustituyendo Var(ȳ | X) = σ²/n y Var(β̂1 | X) = σ²/Sxx:
+# Var(β̂0 | X) = σ²(1/n + x̄²/Sxx)
+# Por tanto:
+# Var(β̂0) = σ²(1/n + x̄²/Sxx)
+```
+
+Grafico de residuos:
+```{r}
+df_residuos4 <- data.frame(
+  Ajustados = fitted(modelo_costo),
+  Residuos = residuals(modelo_costo)
+)
+
+ggplot(df_residuos4, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo original)") +
+  theme_bw()
+```
+
+Parece adecuado ya que los residuos se distribuyen aleatoriarmente alrededor del 0 sin patron visible.
+
+- c). Calcule la recta de mínimos cuadrados para predecir ln y a partir de ln x.
+
+Ajustamos el modelo:
+```{r}
+modelo_costolog <- lm(log(costo) ~ log(horas_persona), data = df4)
+summary(modelo_costolog)
+```
+
+Grafica: 
+```{r}
+df4 %>%
+  ggplot(aes(x = log(horas_persona), y = log(costo))) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Relación log-log: ln(costo) vs ln(horas_persona)",
+    x = "ln(Horas-persona)",
+    y = "ln(Costo)"
+  ) +
+  theme_bw()
+```
+
+
+- d). Grafique los residuos contra los valores ajustados. ¿El modelo parece adecuado?
+```{r}
+df_residuos_log <- data.frame(
+  Ajustados = fitted(modelo_costolog),
+  Residuos = residuals(modelo_costolog)
+)
+
+ggplot(df_residuos_log, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo log-log)") +
+  theme_bw()
+
+```
+
+Si, ya que los puntos se dispersan alrededor del 0.
+
+- e). Usando el modelo más adecuado, construya un intervalo de predicción de 95% para el costo de un proyecto que requiere mil horas-persona de trabajo.
+
+Bueno, el mas adecuado segun las graficas es el logaritmico, por lo tanto:
+
+```{r}
+predict(modelo_costolog, newdata = data.frame(horas_persona = 1000), interval = "prediction")
+predict(modelo_costolog, newdata = data.frame(horas_persona = 1000), interval = "confidence")
+```
+
+# Ejercicio 5.
+- Carga del dataset.
+```{r}
+mol <- c(
+  10.20, 5.03, 8.84, 6.62, 2.89, 2.31, 7.13, 3.40, 5.57, 7.23,
+  2.12, 1.67, 5.33, 16.70, 9.75, 2.74, 2.58, 1.50
+)
+
+y <- c(
+  2.6, 19.9, 0.8, 5.3, 20.3, 39.4, 5.8, 29.4, 2.2, 5.5,
+  33.1, 44.2, 13.1, 0.6, 2.2, 16.9, 35.5, 48.0
+)
+
+df5 <- data.frame(mol, y)
+df5
+
+# 5️ Distribuciones de β̂1 y β̂0
+# ------------------------------------------------------------
+# Si los errores εi ∼ N(0, σ²),
+# entonces yi ∼ N(β0 + β1xi, σ²)
+
+# β̂1 y β̂0 son combinaciones lineales de los yi,
+# por tanto siguen distribuciones normales:
+
+# β̂1 ∼ N(β1, σ²/Sxx)
+# β̂0 ∼ N(β0, σ²(1/n + x̄²/Sxx)
+```
+
+- a). Calcule la recta de mínimos cuadrados para predecir y a partir de x.
+
+Ajustamos el modelo:  
+```{r}
+modelo_mol <- lm(y ~ mol, data = df5)
+summary(modelo_mol)
+```
+
+Grafica:
+```{r}
+# La razón por la cual en el eje X va el % mol (y no 𝑦y) es porque estamos tratando de predecir 𝑦y a partir de x.
+
+#x → es la variable independiente o predictora𝑦y → es la variable dependiente o respuesta
+
+ggplot(df5, aes(x = mol, y = y)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Recta de mínimos cuadrados: y vs porcentaje_mol",
+    x = "% mol",
+    y = "y"
+  ) +
+  theme_bw()
+```
+
+- b). Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado?
+
+```{r}
+df_residuos5 <- data.frame(
+  Ajustados = fitted(modelo_mol),
+  Residuos = residuals(modelo_mol)
+)
+
+ggplot(df_residuos5, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo original)") +
+  theme_bw()
+```
+
+Los puntos forman una curva o patron, no estan dispersos respecto al 0, por lo tanto no es el mas adecuado.
+
+- c). Calcule la recta de mínimos cuadrados para predecir y a partir de 1/x.
+
+Ajustamos el modelo:
+```{r}
+modelo_mol_sobre <- lm(y ~ I(1/mol), data = df5)
+summary(modelo_mol_sobre)
+```
+
+Grafica:
+```{r}
+ggplot(df5, aes(x = 1/mol, y = y)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Recta de mínimos cuadrados: y ~ 1/x",
+    x = "1 / (% mol)",
+    y = "y"
+  ) +
+  theme_bw()
+```
+
+- d). Grafique los residuos contra los valores ajustados.
+
+Ajustamos el modelo:
+```{r}
+modelo_mol_sobre <- lm(y ~ I(1/mol), data = df5)
+summary(modelo_mol_sobre)
+```
+
+Grafico:
+```{r}
+df_residuos5_1 <- data.frame(
+  Ajustados = fitted(modelo_mol_sobre),
+  Residuos = residuals(modelo_mol_sobre)
+)
+
+ggplot(df_residuos5_1, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo 1/x)") +
+  theme_bw()
+```
+
+- e). Usando la mejor línea ajustada, obtenga un intervalo de confianza del 95% para la media de y cuando x = 5.0.
+
+```{r}
+predict(modelo_mol_sobre, newdata = data.frame(mol = 5), interval = "prediction")
+predict(modelo_mol_sobre, newdata = data.frame(mol = 5), interval = "confidence")
+```
+
+
+# Ejercicio 6.
+
+- Carga del dataset:
+```{r}
+Dia <- 1:45
+
+velocidad_viento <- c(
+  4.2, 1.4, 6.6, 4.7, 2.6, 5.8, 1.8, 5.8, 7.3, 7.1,
+  6.4, 4.6, 1.6, 2.3, 4.2, 3.7, 5.9, 6.0, 10.7, 5.3,
+  5.1, 4.9, 8.3, 7.1, 9.2, 4.4, 8.0, 10.5, 5.1, 5.8,
+  2.6, 7.7, 6.1, 5.5, 4.7, 4.0, 2.3, 11.9, 8.6, 5.6,
+  4.2, 6.2, 7.7, 6.6, 6.9
+)
+
+corriente <- c(
+  1.9, 0.7, 2.2, 2.0, 1.1, 2.6, 0.3, 2.3, 2.6, 2.7,
+  2.4, 2.2, 1.1, 1.5, 1.5, 2.1, 2.2, 2.6, 3.2, 2.3,
+  1.9, 2.3, 3.1, 2.3, 2.9, 1.8, 2.6, 3.0, 2.1, 2.5,
+  1.4, 2.8, 2.4, 2.2, 2.3, 2.0, 1.2, 3.0, 2.5, 2.1,
+  1.7, 2.3, 2.6, 2.9, 2.6
+)
+
+df6 <- data.frame(Dia, velocidad_viento, corriente)
+df6
+```
+
+- a). Calcule la recta de mínimos cuadrados para predecir y a partir de x. Realice una gráfica de residuos contra valores ajustados.
+
+Ajustamos el modelo:
+```{r}
+modelo_day <- lm(corriente ~ velocidad_viento, data = df6)
+summary(modelo_day)
+```
+
+Grafica de la recta:
+```{r}
+ggplot(df6, aes(x = velocidad_viento, y = corriente)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Recta de mínimos cuadrados: corriente vs velocidad_viento",
+    x = "velocidad_viento",
+    y = "corriente"
+  ) +
+  theme_bw()
+```
+
+Grafica de residuos:
+```{r}
+df_residuos6 <- data.frame(
+  Ajustados = fitted(modelo_day),
+  Residuos = residuals(modelo_day)
+)
+
+ggplot(df_residuos6, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo original)") +
+  theme_bw()
+```
+
+- b). Calcule la recta de mínimos cuadrados para predecir y a partir de ln x. Realice una gráfica de residuos contra valores ajustados.
+
+Ajustamos el modelo:
+```{r}
+modelo_day_log <- lm(corriente ~ log(velocidad_viento), data = df6)
+summary(modelo_day_log)
+```
+
+Grafica de la recta:
+```{r}
+ggplot(df6, aes(x = log(velocidad_viento), y = corriente)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Recta de mínimos cuadrados: corriente vs velocidad_viento con log",
+    x = "velocidad_viento",
+    y = "corriente"
+  ) +
+  theme_bw()
+```
+
+Grafico de los residuos:
+```{r}
+df_residuos6_b <- data.frame(
+  Ajustados = fitted(modelo_day_log),
+  Residuos = residuals(modelo_day_log)
+)
+
+ggplot(df_residuos6_b, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo log)") +
+  theme_bw()
+```
+
+- c). Calcule la recta de mínimos cuadrados para predecir ln y a partir de x. Realice una gráfica de residuos contra valores ajustados.
+
+Ajustamos el modelo:
+```{r}
+modelo_day_log_y <- lm(log(corriente) ~ velocidad_viento, data = df6)
+summary(modelo_day_log_y)
+```
+
+Grafica de la recta:
+```{r}
+ggplot(df6, aes(x = velocidad_viento, y = log(corriente))) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Recta de mínimos cuadrados: corriente vs velocidad_viento con log_x",
+    x = "velocidad_viento",
+    y = "corriente"
+  ) +
+  theme_bw()
+```
+
+Grafica de los residuos:
+```{r}
+df_residuos6_c <- data.frame(
+  Ajustados = fitted(modelo_day_log_y),
+  Residuos = residuals(modelo_day_log_y)
+)
+
+ggplot(df_residuos6_c, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo log_y)") +
+  theme_bw()
+```
+
+- d). Calcule la recta de mínimos cuadrados para predecir √y a partir de x. Realice una gráfica de residuos contra valores ajustados.
+
+Ajustamos el modelo:
+```{r}
+modelo_day_sqrty <- lm(sqrt(corriente) ~ velocidad_viento, data = df6)
+summary(modelo_day_sqrty)
+```
+
+Grafica de la recta:
+```{r}
+ggplot(df6, aes(x = velocidad_viento, y = sqrt(corriente))) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Recta de mínimos cuadrados: corriente vs velocidad_viento con sqrty",
+    x = "velocidad_viento",
+    y = "corriente"
+  ) +
+  theme_bw()
+```
+
+Grafica de los residuos:
+```{r}
+df_residuos6_d <- data.frame(
+  Ajustados = fitted(modelo_day_sqrty),
+  Residuos = residuals(modelo_day_sqrty)
+)
+
+ggplot(df_residuos6_c, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos vs valores ajustados (modelo log_y)") +
+  theme_bw()
+```
+
+- e). ¿Cuál de los cuatro modelos (de a a d) se ajusta mejor? Explique.
+
+El que mejor se ajusta es el B donde se le aplica logaritmo a la variable x, ya que en la grafica de residuos los puntos estan mas dispersos, mientras que las demas graficas tienen un patron.
+
+- f). Para el modelo que ajusta mejor, grafique los residuos contra el orden en el cual se realizaron las observaciones. ¿Los residuos parecen variar con el tiempo?
+
+```{r}
+df_residuos6_defi <- data.frame(
+  Orden = 1:length(residuals(modelo_day_log)),
+  Residuos = residuals(modelo_day_log)
+)
+ggplot(df_residuos6_defi, aes(x = Orden, y = Residuos)) +
+  geom_point() +
+  geom_line() +  
+  geom_hline(yintercept = 0, color = "red") +
+  labs(
+    title = "Residuos vs orden de observaciones",
+    x = "Orden de observación",
+    y = "Residuos"
+  ) +
+  theme_bw()
+```
+
+Si, los datos varian con el tiempo segun la grafica confirmando que fue el modelo mas adecuado.
+
+- g). Utilizando el mejor modelo, pronostique la corriente cuando la velocidad del viento sea 5.0 mi/h.
+
+```{r}
+predict(modelo_day_log, newdata = data.frame(velocidad_viento = 5), interval = "prediction")
+```
+
+- h). Utilizando el mejor modelo, determine un intervalo de predicción de  
+95%  para la corriente en un día específico cuando la velocidad del viento es 5.0 mi/h.
+```{r}
+predict(modelo_day_log, newdata = data.frame(velocidad_viento = 5), interval = "confidence")
+```
+
+- i). Para el mejor modelo, verifique si cumple o no los supuestos de los errores.
+
+Supuesto de independencia:
+```{r}
+# Recordar si p_valor > 0.05 no se rechaza, si p_valor < se rechaza
+r <- residuals(modelo_day_log)
+car::durbinWatsonTest(modelo_day_log)  
+acf(r)                          
+```
+
+El p-valor es menor que alpha, por lo tanto, si hay autocorrelacion.
+
+Supuesto de normalidad:
+```{r}
+shapiro.test(r)
+
+qqnorm(r, main= 'Grafico de normalidad')
+qqline(r, col='blue')
+```
+
+En la normalidad el p-valor es mayor que alpha, entonces los errores siguen una distribuccion normal.
+
+Supuesto de media cero:
+```{r}
+mean(r)
+t.test(r, mu = 0)
+```
+
+En el supuesto de media cero el p-valor es mayor que alpha, por lo tanto, los errores tienen media cero, no se rechaza H0.
+
+Supuesto de homocedasticidad:
+```{r}
+require(lmtest)
+lmtest:::bptest(modelo_day_log)
+```
+
+Por ultimo en homocedasticidad el p-valor es menor que alpha, entonces se rechaza H0, no hay homocedasticidad.
+
+```{r}
+# Estimar b1 y b0
+b1 <- coef(modelo_day_log)[2]
+b0 <- coef(modelo_day_log)[1]
+b1
+b0
+```
+
+# Ejercicio 7
+- Carga del dataset:
+```{r}
+R1 <- c(1.2,1.3,1.3,1.3,1.5,1.5,1.6,2.0,2.0,2.4,2.9,3.0,2.0,2.0,2.1,2.1,
+        2.2,2.2,2.3,2.3,2.4,2.4,2.4,2.4,2.6,2.7,2.7,2.8,2.9,3.0,3.1,3.2,
+        3.2,3.5,3.5,3.5)
+R2 <- c(1.2,1.5,1.6,1.7,1.7,1.7,1.8,1.8,1.9,1.9,1.9,2.0,4.0,4.0,4.3,4.3,
+        4.4,4.4,4.7,4.7,4.8,4.8,4.9,5.4,5.5,5.8,5.9,6.0,6.0,6.1,6.2,6.5,
+        6.6,6.9,7.0,7.0)
+
+df7 <- data.frame(R1, R2)
+```
+
+- a). Calcule la recta de mínimos cuadrados para predecir la concentración de radón en la posición 2 a partir de la concentración en la posición 1.
+
+Ajuste del modelo
+```{r}
+modelo_r <- lm(R2 ~ R1, data = df7)
+
+summary(modelo_r)
+```
+
+Grafica:
+```{r}
+ggplot(df7, aes(x = R1, y = R2)) +
+  geom_point(color = "darkblue", size = 2.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Recta de mínimos cuadrados: R2 ~ R1",
+    x = "Concentración R1 (posición 1)",
+    y = "Concentración R2 (posición 2)"
+  ) +
+  theme_bw()
+```
+
+- b). Grafique los residuos contra los valores ajustados. ¿El modelo lineal parece adecuado?
+
+```{r}
+df_residuos <- data.frame(
+  Ajustados = fitted(modelo_r),
+  Residuos = residuals(modelo_r)
+)
+
+ggplot(df_residuos, aes(x = Ajustados, y = Residuos)) +
+  geom_point(color = "black", size = 2.5) +
+  geom_hline(yintercept = 0, color = "red", linewidth = 1) +
+  labs(
+    title = "Residuos vs valores ajustados (modelo lineal R2 ~ R1)",
+    x = "Valores ajustados (Ŷ)",
+    y = "Residuos (Y - Ŷ)"
+  ) +
+  theme_bw()
+```
+
+- c). Divida los datos en dos grupos: los puntos donde R1 < 4 en un grupo y donde R1 ≥ 4 en el otro. Calcule la recta de mínimos cuadrados y la gráfica de residuos para cada grupo. ¿La recta describe bien algún grupo? ¿Cuál?
+
+Separamos:
+```{r}
+df_bajo <- subset(df7, R1 < 3)
+df_alto <- subset(df7, R1 >= 3)
+```
+
+Modelo para menor:
+```{r}
+modelo_bajo <- lm(R2 ~ R1, data = df_bajo)
+summary(modelo_bajo)
+
+ggplot(df_bajo, aes(x = R1, y = R2)) +
+  geom_point(color = "darkgreen", size = 2.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Recta de mínimos cuadrados (R1 < 4)",
+       x = "R1", y = "R2") +
+  theme_bw()
+
+df_res_bajo <- data.frame(Ajustados = fitted(modelo_bajo),
+                          Residuos = residuals(modelo_bajo))
+
+ggplot(df_res_bajo, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos R1 < 4", x = "Ajustados", y = "Residuos") +
+  theme_bw()
+```
+
+Modelo para mayor:
+```{r}
+modelo_alto <- lm(R2 ~ R1, data = df_alto)
+summary(modelo_alto)
+
+ggplot(df_alto, aes(x = R1, y = R2)) +
+  geom_point(color = "orange", size = 2.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Recta de mínimos cuadrados (R1 ≥ 4)",
+       x = "R1", y = "R2") +
+  theme_bw()
+
+df_res_alto <- data.frame(Ajustados = fitted(modelo_alto),
+                          Residuos = residuals(modelo_alto))
+
+ggplot(df_res_alto, aes(x = Ajustados, y = Residuos)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Residuos R1 ≥ 4", x = "Ajustados", y = "Residuos") +
+  theme_bw()
+
+```
+
+La mas adecuada es para la segunda condicion ya que no existe patron y son mas dispersos los puntos.
+
+
+# Ejercicio 8
+- Carga del dataset:
+
+```{r}
+esteres <- c(284.34, 215.34, 139.38, 658.38, 173.01, 188.72, 197.81, 
+             105.14, 229.55, 144.39, 238.33, 295.24, 312.95, 172.79, 
+             256.02, 170.41)
+
+acidos <- c(445.70, 332.59, 356.98, 192.59, 265.43, 166.73, 291.72, 
+            412.42, 210.58, 254.82, 215.83, 442.57, 203.62, 342.21, 
+            152.38, 391.30)
+
+df8 <- data.frame(esteres, acidos)
+```
+
+
+- a). Construya un diagrama de dispersión de la concentración de ácido (y) contra la concentración de ésteres (x). Indique el dato atípico.
+
+```{r}
+ggplot(df8, aes(x = esteres, y = acidos)) +
+  geom_point(color = "darkblue", size = 3) +
+  labs(title = "Dispersión: Ácidos vs Ésteres",
+       x = "Ésteres (mg/L)",
+       y = "Ácidos (mg/L)") +
+  theme_bw()
+```
+
+- b). Calcule los coeficientes de la recta de mínimos cuadrados para predecir el nivel de ácido a partir del nivel de ésteres, junto con sus desviaciones estándar estimadas.
+
+```{r}
+modeloaci <- lm(acidos ~ esteres, data = df8)
+summary(modeloaci)
+
+b1 <- coef(modeloaci)[2]
+b0 <- coef(modeloaci)[1]
+b1
+b0
+```
+
+- c). Calcule el valor P de la prueba de hipótesis nula  H0:β1=0 .
+
+```{r}
+modeloaci <- lm(acidos ~ esteres, data = df8)
+summary(modeloaci)
+
+resumen <- summary(modeloaci)
+pval <- resumen$coefficients[2, 4]
+pval
+```
+
+- d). Elimine el dato atípico y calcule nuevamente los coeficientes de la recta de mínimos cuadrados, junto con sus desviaciones estándar estimadas.
+
+Identificamos el dato atipico:
+```{r}
+#Identificamos el dato atipico
+cooks <- cooks.distance(modelo1)
+which.max(cooks)
+df8[which.max(cooks), ]
+```
+
+Eliminamos el dato atipico:
+```{r}
+df8_sin <- df8[-which.max(cooks), ]
+
+modelosin <- lm(acidos ~ esteres, data = df8_sin)
+summary(modelo2)
+```
+
+Nuevamente los coeficientes:
+```{r}
+b1 <- coef(modelosin)[2]
+b0 <- coef(modelosin)[1]
+b1
+b0
+```
+
+- e). Calcule el valor P de la prueba de hipótesis nula  H0:β1=0  para los datos con el dato atípico eliminado.
+
+```{r}
+resumen <- summary(modelosin)
+pval <- resumen$coefficients[2, 4]
+pval
+```
+

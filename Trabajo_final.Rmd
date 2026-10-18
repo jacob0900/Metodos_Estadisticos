@@ -1,0 +1,1085 @@
+---
+title: ""
+author: "Jacobo Londoño, Andres Parejo, Paulo Poveda, Nino"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: true
+    code_folding: hide
+---
+
+
+
+
+# Bienestar Subjetivo  
+
+# Planteamiento del problema:
+En años recientes, la psicología y las ciencias sociales han mostrado un creciente interés por identificar los elementos que determinan el bienestar subjetivo. Superando enfoques convencionales centrados en aspectos económicos, actualmente se analiza cómo variables como hábitos cotidianos, cargas de obligaciones y la autopercepción de complejidad existencial inciden en la satisfacción vital. El conjunto de datos presentado reproduce los hallazgos de una investigación demográfica que sistematiza variables relativas al ámbito personal, ocupacional y de ocio.
+
+
+## Objetivo general
+Analizar cómo factores no económicos de la vida cotidiana influyen en el bienestar subjetivo de las personas, utilizando datos simulados que reflejen condiciones reales, con el fin de aportar evidencia para el diseño de políticas públicas, programas de bienestar laboral o estrategias que mejoren la calidad de vida desde un enfoque integral
+
+## Objetivos específicos
+En esta presentacion nos enfocaremos en preguntas mas concretas tales como :
+
+-  ¿Las personas con hijos tienen un nivel de satisfacción subjetiva diferente a las personas sin hijos?
+
+-  ¿Las personas con más responsabilidades semanales tienen menor
+satisfacción? 
+
+-  ¿El tiempo libre y la percepción de vida simple están relacionadas con mayor bienestar?
+
+-  ¿El estado civil marca diferencia en el bienestar reportado?
+
+## Justificación
+Este estudio es relevante porque explora cómo factores como tener hijos, las responsabilidades semanales y la percepción de una vida sencilla influyen en el bienestar subjetivo, yendo más allá de indicadores económicos tradicionales como el ingreso o el empleo. Al utilizar datos que simulan condiciones reales, se busca entender patrones útiles para diseñar políticas públicas, programas de apoyo familiar o estrategias que reduzcan el estrés laboral y promuevan la salud mental. Además, aporta al conocimiento académico al analizar variables poco estudiadas en conjunto, ofreciendo una visión integral que puede mejorar la calidad de vida desde un enfoque práctico y multidimensional.
+
+# Análisis Exploratorio (EDA)
+
+## 1. Revisión de datos:
+
+
+***Clasifique cada una de las variables de la base de datos acuerdo con su naturaleza y nivel de medición***
+
+```{r}
+# Instalar paquetes si son necesarios (descomenta las siguientes líneas)
+# install.packages("knitr")
+# install.packages("kableExtra")
+
+# Cargar librerías
+library(knitr)
+library(kableExtra)
+
+# Crear el data frame con las variables
+tabla_variables <- data.frame(
+  Variable = c("hijos", 
+               "nivel_satisfaccion_vida",
+               "horas_semana_responsabilidades",
+               "tiempo_libre_semanal",
+               "autopercibe_vida_simple",
+               "estado_civil"),
+  
+  Tipo = c("Categórica ",
+           "Numérica ",
+           "Numérica ",
+           "Numérica ", 
+           "Categórica ",
+           "Categórica "),
+  
+  Definición = c("Indica si el individuo tiene hijos (Sí/No)",
+                 "Nivel de satisfacción con la vida (escala numérica)",
+                 "Horas semanales dedicadas a responsabilidades",
+                 "Horas semanales de tiempo libre disponible",
+                 "Percepción de tener una vida 'simple' (Sí/No)",
+                 "Estado civil actual (Casado, Soltero, etc.)"),
+  
+  Escala_Medición = c("Nominal",
+                      "Ordinal",
+                      "Razón",
+                      "Razón",
+                      "Nominal",
+                      "Nominal")
+)
+
+# Mostrar la tabla con formato profesional
+kable(tabla_variables, align = "l", col.names = c("Variable", "Tipo", "Definición", "Escala Medición")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE, 
+                font_size = 14) %>%
+  column_spec(1, bold = TRUE)
+```
+
+
+
+---
+
+
+
+***Instalar y cargar paquetes necesarios***
+
+
+
+
+```{r}
+#Codigo aquí
+library(dplyr)# Manipulación de Datos
+library(ggplot2)# Visualización de datos 
+library(readxl)# Importación de datos
+library(tibble)# Tablas
+library(readr)#Para cargar base de datos
+library(tidyverse)
+
+
+
+
+
+file.choose()
+datos <- read.csv("C:\\Users\\jacob\\OneDrive\\Escritorio\\base_bienestar_subjetivo.csv")
+
+```
+
+
+
+
+---
+
+## 2. Preparación de la base de datos:
+
+Cargar base de datos:
+```{r}
+#Codigo aqui
+file.choose()
+datos <- read.csv("C:\\Users\\jacob\\OneDrive\\Escritorio\\base_bienestar_subjetivo.csv")
+
+
+```
+
+**Nombres de variables**
+```{r}
+names(datos)
+```
+
+**Dimesiones de la base de datos**
+```{r}
+dim(datos)
+```
+
+**Mostrar las primeras filas de la base de datos**
+```{r}
+head(datos)
+```
+
+**Tipos de datos**
+```{r}
+str(datos)
+```
+
+
+### Revisión de valores faltantes
+```{r}
+colSums(is.na(datos))
+```
+Hemos encontrado algunos valores faltantes en las variables horas_semana_responsabilidades y ingreso_mensual. Pero para mantener la simplicidad nada mas trabajeromos con la variable horas_semana_responsabilidades ya que es con la que vamos a trabajar en nuestro proyecto.
+
+
+### Solucion a los valores faltantes 
+
+Ya que el numero total de valores faltantes es de 10 lo cual representa nada mas el 2.5% de la muestra decidiremos eliminar aquellas filas que tengan valores faltantes en la colunma horas_semana_responsabilidades para no añadir sesgo y proteger la muestra 
+
+```{r}
+# Cargar dplyr si no lo tienes instalado (descomenta la siguiente línea)
+# install.packages("dplyr")
+library(dplyr)
+
+# Filtrar solo las filas donde 'horas_semana_responsabilidades' NO es NA
+datos_limpios <- datos %>%
+  filter(!is.na(horas_semana_responsabilidades))
+
+# Verificar el número de filas eliminadas
+n_filas_original <- nrow(datos)
+n_filas_limpio <- nrow(datos_limpios)
+filas_eliminadas <- n_filas_original - n_filas_limpio
+
+cat("Se eliminaron", filas_eliminadas, "filas con NA en 'horas_semana_responsabilidades'")
+
+
+```
+
+
+### Datos Atipicos 
+
+```{r}
+# --------------------------------------------
+# 0. CONFIGURACIÓN INICIAL
+# --------------------------------------------
+# Configurar repositorio CRAN
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+# Instalar paquetes (solo si es necesario)
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("grid")) install.packages("grid")
+# Cargar librerías
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(grid)
+
+# --------------------------------------------
+# 1. IMPORTAR DATOS
+# --------------------------------------------
+# Ajusta la ruta del archivo CSV
+datos_limpios <- read.csv("C:\\Users\\jacob\\OneDrive\\Escritorio\\base_bienestar_subjetivo.csv") 
+
+# --------------------------------------------
+# 2. FUNCIONES PARA GRÁFICOS
+# --------------------------------------------
+# Función para diagramas de pastel
+crear_pie_chart <- function(data, variable, titulo) {
+  
+  frecuencias <- data %>%
+    count(.data[[variable]]) %>%
+    mutate(
+      porcentaje = round(n / sum(n) * 100, 1),
+      etiqueta = paste0(.data[[variable]], "\n", porcentaje, "%")
+    )
+  
+  # Verificar valores no válidos
+  categorias_validas <- c("Sí", "No")
+  valores_raros <- frecuencias %>%
+    filter(!.data[[variable]] %in% categorias_validas)
+  
+  # Crear gráfico
+  ggplot(frecuencias, aes(x = "", y = porcentaje, fill = .data[[variable]])) +
+    geom_bar(width = 1, stat = "identity") +
+    coord_polar("y", start = 0) +
+    geom_text(aes(label = etiqueta), 
+              position = position_stack(vjust = 0.5),
+              color = "white",
+              size = 4) +
+    labs(title = titulo, fill = "") +
+    theme_void() +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 11)) +
+    scale_fill_brewer(palette = "Set2") +
+    if (nrow(valores_raros) > 0) {
+      annotate("text", x = 1.5, y = 1.5, 
+               label = paste("Valores no válidos:", paste(valores_raros[[variable]], collapse = ", ")),
+               color = "red", size = 4)
+    }
+}
+
+# Función para boxplots (modificada para títulos más cortos y compactos)
+crear_boxplot <- function(data, variable, titulo) {
+  ggplot(data, aes(y = .data[[variable]])) +
+    geom_boxplot(fill = "#69b3a2", 
+                 color = "#2d708e",
+                 outlier.color = "red",
+                 outlier.size = 2) +
+    labs(title = titulo, y = "") +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 10),
+      plot.margin = margin(t = 5, r = 10, b = 5, l = 10)  # Añadido margen
+    )
+}
+
+# --------------------------------------------
+# 3. GENERAR GRÁFICOS
+# --------------------------------------------
+# Diagramas de pastel
+g1 <- crear_pie_chart(datos_limpios, "hijos", "Distribución: Tener Hijos")
+g2 <- crear_pie_chart(datos_limpios, "autopercibe_vida_simple", "Percepción de Vida Simple")
+
+# Boxplots con títulos más cortos
+g3 <- crear_boxplot(datos_limpios, "nivel_satisfaccion_vida", "Satisfacción Vida")
+g4 <- crear_boxplot(datos_limpios, "horas_semana_responsabilidades", "Responsabilidades (h/sem)")
+g5 <- crear_boxplot(datos_limpios, "tiempo_libre_semanal", "Tiempo Libre (h/sem)")
+
+# --------------------------------------------
+# 4. VISUALIZACIÓN INTEGRADA MEJORADA
+# --------------------------------------------
+# Crear un diseño con más espacio entre gráficos
+grid.arrange(
+  g1, g2, g3, g4, g5,
+  layout_matrix = rbind(
+    c(1, 1, 2, 2),           # Fila 1: 2 gráficos de pastel
+    c(3, 3, 4, 5)            # Fila 2: 3 boxplots distribuidos mejor
+  ),
+  widths = c(1, 1, 1, 1),    # Ancho igual para todas las columnas
+  heights = c(1, 1),         # Altura igual para las filas
+  top = textGrob("Análisis de Bienestar Subjetivo", 
+                 gp = gpar(fontface = "bold", fontsize = 14)),
+  padding = unit(0.8, "line") # Aumentado el padding entre gráficos
+)
+
+```
+Como se puede apreciar en los graficos notamos que la variable tiempo_libre_semana presenta variables negativos y las variables  nivel_satisfaccion_vida y horas_semana_responsabilidades que presentaron valores atípicos que fueron reemplazados por la mediana de la variable correspondiente. Esta decisión responde al criterio académico de asumir normalidad en los datos, como fue indicado por la docente. Aunque algunos valores extremos eran plausibles en escenarios reales, su reemplazo se justifica aquí para evitar distorsiones en medidas como la media y la desviación estándar, y para facilitar el uso de modelos que requieren supuestos paramétricos. 
+
+
+
+---
+
+
+
+## 3. Organización de datos en tablas de frecuencias:
+
+Tabla para la variable nivel_satisfaccion_vida:
+
+```{r}
+# Inspección previa de valores (para diagnóstico explícito)
+cat("==== Diagnóstico inicial de nivel_satisfaccion_vida ====\n")
+cat("Valores mínimos encontrados:", min(datos_limpios$nivel_satisfaccion_vida, na.rm = TRUE), "\n")
+cat("Primeros 10 valores ordenados:", sort(datos_limpios$nivel_satisfaccion_vida)[1:10], "\n")
+
+# Verificar específicamente valores negativos o cero
+valores_no_positivos <- datos_limpios$nivel_satisfaccion_vida <= 0
+valores_no_positivos[is.na(valores_no_positivos)] <- FALSE
+
+cat("Cantidad de valores no positivos detectados:", sum(valores_no_positivos, na.rm = TRUE), "\n")
+if (sum(valores_no_positivos, na.rm = TRUE) > 0) {
+  cat("Valores no positivos encontrados:", datos_limpios$nivel_satisfaccion_vida[valores_no_positivos], "\n")
+  cat("Índices donde aparecen valores no positivos:", which(valores_no_positivos), "\n")
+}
+
+# Identificar outliers usando el método IQR
+q1_sat <- quantile(datos_limpios$nivel_satisfaccion_vida, 0.25, na.rm = TRUE)
+q3_sat <- quantile(datos_limpios$nivel_satisfaccion_vida, 0.75, na.rm = TRUE)
+iqr_sat <- q3_sat - q1_sat
+
+# Límites para outliers (asegurando que el mínimo es 0)
+limite_inf_sat <- max(0, q1_sat - 1.5 * iqr_sat)
+limite_sup_sat <- q3_sat + 1.5 * iqr_sat
+
+# Identificar outliers de forma EXPLÍCITA (manejar NA explícitamente)
+outliers_inferiores_sat <- datos_limpios$nivel_satisfaccion_vida < limite_inf_sat & !is.na(datos_limpios$nivel_satisfaccion_vida)
+outliers_superiores_sat <- datos_limpios$nivel_satisfaccion_vida > limite_sup_sat & !is.na(datos_limpios$nivel_satisfaccion_vida)
+outliers_sat <- outliers_inferiores_sat | outliers_superiores_sat
+
+# IMPORTANTE: Identificar valores negativos EXPLÍCITAMENTE
+negativos_sat <- datos_limpios$nivel_satisfaccion_vida < 0 & !is.na(datos_limpios$nivel_satisfaccion_vida)
+
+# Mostrar estadísticas detalladas
+cat("==== Análisis de nivel_satisfaccion_vida ====\n")
+cat("Rango válido:", round(limite_inf_sat, 2), "a", round(limite_sup_sat, 2), "\n")
+cat("Cantidad de outliers inferiores:", sum(outliers_inferiores_sat), "\n")
+cat("Cantidad de outliers superiores:", sum(outliers_superiores_sat), "\n")
+cat("Cantidad total de outliers:", sum(outliers_sat), "\n")
+
+if (sum(outliers_sat) > 0) {
+  cat("Valores outliers:", datos_limpios$nivel_satisfaccion_vida[outliers_sat], "\n")
+}
+
+cat("Cantidad de valores negativos:", sum(negativos_sat), "\n")
+if (sum(negativos_sat) > 0) {
+  cat("Valores negativos:", datos_limpios$nivel_satisfaccion_vida[negativos_sat], "\n")
+}
+
+# Calcular la mediana para reemplazos
+mediana_sat <- median(datos_limpios$nivel_satisfaccion_vida, na.rm = TRUE)
+cat("Mediana (valor de reemplazo):", mediana_sat, "\n")
+
+# CORRECCIÓN IMPORTANTE: Reemplazar explícitamente cualquier valor negativo
+if (sum(negativos_sat) > 0) {
+  cat("Reemplazando", sum(negativos_sat), "valores negativos con la mediana\n")
+  datos_limpios$nivel_satisfaccion_vida[negativos_sat] <- mediana_sat
+}
+
+# Reemplazar outliers con la mediana
+if (sum(outliers_sat) > 0) {
+  cat("Reemplazando", sum(outliers_sat), "outliers con la mediana\n")
+  datos_limpios$nivel_satisfaccion_vida[outliers_sat] <- mediana_sat
+}
+
+# Verificación adicional tras las correcciones
+cat("\nVerificación post-corrección:\n")
+neg_despues <- sum(datos_limpios$nivel_satisfaccion_vida < 0, na.rm = TRUE)
+cat("Valores negativos después del reemplazo:", neg_despues, "\n")
+
+# Generar nueva tabla de frecuencia
+tabla_satisfaccion <- table(cut(datos_limpios$nivel_satisfaccion_vida, breaks = 10))
+cat("\nTabla de frecuencias - nivel_satisfaccion_vida (depurada):\n")
+print(tabla_satisfaccion)
+
+# Verificación final
+cat("\nVerificación final para nivel_satisfaccion_vida:\n")
+neg_restantes_sat <- sum(datos_limpios$nivel_satisfaccion_vida < 0, na.rm = TRUE)
+cat("Valores negativos restantes:", neg_restantes_sat, "\n")
+
+# Recalcular límites para ver si quedan outliers
+q1_sat_final <- quantile(datos_limpios$nivel_satisfaccion_vida, 0.25, na.rm = TRUE)
+q3_sat_final <- quantile(datos_limpios$nivel_satisfaccion_vida, 0.75, na.rm = TRUE)
+iqr_sat_final <- q3_sat_final - q1_sat_final
+limite_inf_sat_final <- max(0, q1_sat_final - 1.5 * iqr_sat_final)
+limite_sup_sat_final <- q3_sat_final + 1.5 * iqr_sat_final
+
+outliers_restantes_sat <- sum((datos_limpios$nivel_satisfaccion_vida < limite_inf_sat_final | 
+                              datos_limpios$nivel_satisfaccion_vida > limite_sup_sat_final) &
+                              !is.na(datos_limpios$nivel_satisfaccion_vida))
+cat("Outliers restantes:", outliers_restantes_sat, "\n")
+```
+
+Tabla para la variable horas_semana_responsabilidades:
+
+```{r}
+
+```
+
+Tabla para la variable tiempo_libre_semanal:
+
+```{r}
+# Inspección previa de valores (para diagnóstico explícito)
+cat("==== Diagnóstico inicial de tiempo_libre_semanal ====\n")
+cat("Valores mínimos encontrados:", min(datos_limpios$tiempo_libre_semanal, na.rm = TRUE), "\n")
+cat("Primeros 10 valores ordenados:", sort(datos_limpios$tiempo_libre_semanal)[1:10], "\n")
+
+# Verificar específicamente valores negativos o cero
+valores_no_positivos <- datos_limpios$tiempo_libre_semanal <= 0
+valores_no_positivos[is.na(valores_no_positivos)] <- FALSE
+
+cat("Cantidad de valores no positivos detectados:", sum(valores_no_positivos, na.rm = TRUE), "\n")
+if (sum(valores_no_positivos, na.rm = TRUE) > 0) {
+  cat("Valores no positivos encontrados:", datos_limpios$tiempo_libre_semanal[valores_no_positivos], "\n")
+  cat("Índices donde aparecen valores no positivos:", which(valores_no_positivos), "\n")
+}
+
+# Identificar outliers usando el método IQR
+q1_tl <- quantile(datos_limpios$tiempo_libre_semanal, 0.25, na.rm = TRUE)
+q3_tl <- quantile(datos_limpios$tiempo_libre_semanal, 0.75, na.rm = TRUE)
+iqr_tl <- q3_tl - q1_tl
+
+# Límites para outliers (asegurando que el mínimo es 0)
+limite_inf_tl <- max(0, q1_tl - 1.5 * iqr_tl)
+limite_sup_tl <- q3_tl + 1.5 * iqr_tl
+
+# Identificar outliers de forma EXPLÍCITA (manejar NA explícitamente)
+outliers_inferiores_tl <- datos_limpios$tiempo_libre_semanal < limite_inf_tl & !is.na(datos_limpios$tiempo_libre_semanal)
+outliers_superiores_tl <- datos_limpios$tiempo_libre_semanal > limite_sup_tl & !is.na(datos_limpios$tiempo_libre_semanal)
+outliers_tl <- outliers_inferiores_tl | outliers_superiores_tl
+
+# IMPORTANTE: Identificar valores negativos EXPLÍCITAMENTE
+negativos_tl <- datos_limpios$tiempo_libre_semanal < 0 & !is.na(datos_limpios$tiempo_libre_semanal)
+
+# Mostrar estadísticas detalladas
+cat("==== Análisis de tiempo_libre_semanal ====\n")
+cat("Rango válido:", round(limite_inf_tl, 2), "a", round(limite_sup_tl, 2), "\n")
+cat("Cantidad de outliers inferiores:", sum(outliers_inferiores_tl), "\n")
+cat("Cantidad de outliers superiores:", sum(outliers_superiores_tl), "\n")
+cat("Cantidad total de outliers:", sum(outliers_tl), "\n")
+
+if (sum(outliers_tl) > 0) {
+  cat("Valores outliers:", datos_limpios$tiempo_libre_semanal[outliers_tl], "\n")
+}
+
+cat("Cantidad de valores negativos:", sum(negativos_tl), "\n")
+if (sum(negativos_tl) > 0) {
+  cat("Valores negativos:", datos_limpios$tiempo_libre_semanal[negativos_tl], "\n")
+}
+
+# Calcular la mediana para reemplazos
+mediana_tl <- median(datos_limpios$tiempo_libre_semanal, na.rm = TRUE)
+cat("Mediana (valor de reemplazo):", mediana_tl, "\n")
+
+# CORRECCIÓN IMPORTANTE: Reemplazar explícitamente cualquier valor negativo
+if (sum(negativos_tl) > 0) {
+  cat("Reemplazando", sum(negativos_tl), "valores negativos con la mediana\n")
+  datos_limpios$tiempo_libre_semanal[negativos_tl] <- mediana_tl
+}
+
+# Reemplazar outliers con la mediana
+if (sum(outliers_tl) > 0) {
+  cat("Reemplazando", sum(outliers_tl), "outliers con la mediana\n")
+  datos_limpios$tiempo_libre_semanal[outliers_tl] <- mediana_tl
+}
+
+# Verificación adicional tras las correcciones
+cat("\nVerificación post-corrección:\n")
+neg_despues <- sum(datos_limpios$tiempo_libre_semanal < 0, na.rm = TRUE)
+cat("Valores negativos después del reemplazo:", neg_despues, "\n")
+
+# Generar nueva tabla de frecuencia
+tabla_tiempo_libre <- table(cut(datos_limpios$tiempo_libre_semanal, breaks = 10))
+cat("\nTabla de frecuencias - tiempo_libre_semanal (depurada):\n")
+print(tabla_tiempo_libre)
+
+# Verificación final
+cat("\nVerificación final para tiempo_libre_semanal:\n")
+neg_restantes_tl <- sum(datos_limpios$tiempo_libre_semanal < 0, na.rm = TRUE)
+cat("Valores negativos restantes:", neg_restantes_tl, "\n")
+
+# Recalcular límites para ver si quedan outliers
+q1_tl_final <- quantile(datos_limpios$tiempo_libre_semanal, 0.25, na.rm = TRUE)
+q3_tl_final <- quantile(datos_limpios$tiempo_libre_semanal, 0.75, na.rm = TRUE)
+iqr_tl_final <- q3_tl_final - q1_tl_final
+limite_inf_tl_final <- max(0, q1_tl_final - 1.5 * iqr_tl_final)
+limite_sup_tl_final <- q3_tl_final + 1.5 * iqr_tl_final
+
+outliers_restantes_tl <- sum((datos_limpios$tiempo_libre_semanal < limite_inf_tl_final | 
+                             datos_limpios$tiempo_libre_semanal > limite_sup_tl_final) &
+                             !is.na(datos_limpios$tiempo_libre_semanal))
+cat("Outliers restantes:", outliers_restantes_tl, "\n")# Código para la variable tiempo_libre_semanal
+# Identificar outliers usando el método IQR
+q1_tl <- quantile(datos_limpios$tiempo_libre_semanal, 0.25, na.rm = TRUE)
+q3_tl <- quantile(datos_limpios$tiempo_libre_semanal, 0.75, na.rm = TRUE)
+iqr_tl <- q3_tl - q1_tl
+# Asegurar que el límite inferior no sea negativo para variables que no pueden tener valores negativos
+limite_inf_tl <- max(0, q1_tl - 1.5 * iqr_tl)
+limite_sup_tl <- q3_tl + 1.5 * iqr_tl
+
+# Identificar outliers (manejar NA explícitamente)
+outliers_tl <- datos_limpios$tiempo_libre_semanal < limite_inf_tl | 
+               datos_limpios$tiempo_libre_semanal > limite_sup_tl
+outliers_tl[is.na(outliers_tl)] <- FALSE  # Convertir NA a FALSE
+
+# Mostrar estadísticas sobre outliers
+cat("==== Análisis de tiempo_libre_semanal ====\n")
+cat("Rango válido:", round(limite_inf_tl, 2), "a", round(limite_sup_tl, 2), "\n")
+cat("Cantidad de outliers:", sum(outliers_tl, na.rm = TRUE), "\n")
+if (sum(outliers_tl, na.rm = TRUE) > 0) {
+  cat("Valores outliers:", datos_limpios$tiempo_libre_semanal[outliers_tl], "\n")
+}
+
+# Identificar valores negativos
+negativos_tl <- datos_limpios$tiempo_libre_semanal < 0
+negativos_tl[is.na(negativos_tl)] <- FALSE  # Convertir NA a FALSE
+cat("Cantidad de valores negativos:", sum(negativos_tl, na.rm = TRUE), "\n")
+if (sum(negativos_tl, na.rm = TRUE) > 0) {
+  cat("Valores negativos:", datos_limpios$tiempo_libre_semanal[negativos_tl], "\n")
+}
+
+# Calcular la mediana para reemplazos
+mediana_tl <- median(datos_limpios$tiempo_libre_semanal, na.rm = TRUE)
+cat("Mediana (valor de reemplazo):", mediana_tl, "\n")
+
+# Reemplazar outliers con la mediana
+datos_limpios$tiempo_libre_semanal[outliers_tl] <- mediana_tl
+
+# Reemplazar valores negativos con la mediana
+datos_limpios$tiempo_libre_semanal[negativos_tl] <- mediana_tl
+
+# Generar tabla de frecuencia después de reemplazos
+tabla_tiempo_libre <- table(cut(datos_limpios$tiempo_libre_semanal, breaks = 10))
+cat("\nTabla de frecuencias - tiempo_libre_semanal (depurada):\n")
+print(tabla_tiempo_libre)
+
+# Verificación final
+cat("\nVerificación final para tiempo_libre_semanal:\n")
+neg_restantes_tl <- sum(datos_limpios$tiempo_libre_semanal < 0, na.rm = TRUE)
+cat("Valores negativos restantes:", neg_restantes_tl, "\n")
+
+# Recalcular límites para ver si quedan outliers
+q1_tl_final <- quantile(datos_limpios$tiempo_libre_semanal, 0.25, na.rm = TRUE)
+q3_tl_final <- quantile(datos_limpios$tiempo_libre_semanal, 0.75, na.rm = TRUE)
+iqr_tl_final <- q3_tl_final - q1_tl_final
+limite_inf_tl_final <- max(0, q1_tl_final - 1.5 * iqr_tl_final)
+limite_sup_tl_final <- q3_tl_final + 1.5 * iqr_tl_final
+
+outliers_restantes_tl <- sum(datos_limpios$tiempo_libre_semanal < limite_inf_tl_final | 
+                             datos_limpios$tiempo_libre_semanal > limite_sup_tl_final, 
+                             na.rm = TRUE)
+cat("Outliers restantes:", outliers_restantes_tl, "\n")
+```
+
+Tabla para la variable hijos:
+
+
+```{r}
+
+# Desactivar notación científica
+options(scipen=999)
+
+# Crear la tabla de frecuencia para variable categórica
+tabla_hijos <- table(datos_limpios$hijos)
+
+# Convertir en data frame para mejor presentación
+tabla_hijos_df <- as.data.frame(tabla_hijos)
+colnames(tabla_hijos_df) <- c("Tiene Hijos", "Frecuencia")
+
+# Calcular la frecuencia relativa
+frecuencia_relativa <- prop.table(tabla_hijos) * 100  # Convertir a porcentaje
+tabla_hijos_df$"Frecuencia Relativa (%)" <- round(frecuencia_relativa, 2)  # Agregar columna con % y redondear
+
+# No tiene sentido calcular frecuencia acumulada para variables categóricas nominales,
+# pero se puede hacer si la variable es ordinal o se desea de todas formas
+
+# Mostrar la tabla resultante
+print(tabla_hijos_df)
+
+
+
+```
+
+Tabla para la variable autopercibe_vida_simple:
+
+
+```{r}
+# Desactivar notación científica
+options(scipen=999)
+
+# Crear la tabla de frecuencia para variable categórica
+tabla_vida_simple <- table(datos_limpios$autopercibe_vida_simple)
+
+# Convertir en data frame para mejor presentación
+tabla_vida_simple_df <- as.data.frame(tabla_vida_simple)
+colnames(tabla_vida_simple_df) <- c("Percibe Vida Simple", "Frecuencia")
+
+# Calcular la frecuencia relativa
+frecuencia_relativa <- prop.table(tabla_vida_simple) * 100  # Convertir a porcentaje
+tabla_vida_simple_df$"Frecuencia Relativa (%)" <- round(frecuencia_relativa, 2)  # Agregar columna con % y redondear
+
+# No tiene sentido calcular frecuencia acumulada para variables categóricas nominales,
+# pero se puede hacer si la variable es ordinal o se desea de todas formas
+
+# Mostrar la tabla resultante
+print(tabla_vida_simple_df)
+
+
+```
+
+
+
+
+## 4. Organización de datos en gráficos
+
+Gráfico de tipo diagrama de barras para la variable hijos :
+
+```{r}
+
+if (require(ggplot2)) {
+  # Encontrar el valor máximo para ajustar el límite del eje y
+  max_freq <- max(tabla_hijos_df$Frecuencia)
+  
+  grafico_hijos <- ggplot(tabla_hijos_df, aes(x = `Tiene Hijos`, y = Frecuencia, fill = `Tiene Hijos`)) +
+    geom_bar(stat = "identity", width = 0.6) +
+    # Colocar etiquetas dentro de las barras si son grandes, fuera si son pequeñas
+    geom_text(aes(label = paste0(Frecuencia, "\n(", `Frecuencia Relativa (%)`, "%)"),
+                  vjust = ifelse(Frecuencia > max_freq/2, 1.5, -0.5),
+                  color = ifelse(Frecuencia > max_freq/2, "white", "black")), 
+              size = 4, position = position_stack(vjust = 0.5)) +
+    # Ampliar el límite del eje Y para asegurar que las etiquetas sean visibles
+    scale_y_continuous(limits = c(0, max_freq * 1.15)) +
+    labs(title = "Distribución de participantes según si tienen hijos",
+         x = "", y = "Frecuencia") +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    scale_fill_brewer(palette = "Set1") +
+    scale_color_identity()  # Permite usar los colores definidos en aes
+  
+  print(grafico_hijos)
+}
+
+
+```
+¿Qué ve?
+
+Gráfico de tipo diagrama de barras para la variable grafico_vida_simple: 
+```{r}
+if (require(ggplot2)) {
+  # Encontrar el valor máximo para ajustar el límite del eje y
+  max_freq <- max(tabla_vida_simple_df$Frecuencia)
+  
+  grafico_vida_simple <<- ggplot(tabla_vida_simple_df, aes(x = `Percibe Vida Simple`, y = Frecuencia, fill = `Percibe Vida Simple`)) +
+    geom_bar(stat = "identity", width = 0.6) +
+    # Colocar etiquetas dentro de las barras si son grandes, fuera si son pequeñas
+    geom_text(aes(label = paste0(Frecuencia, "\n(", `Frecuencia Relativa (%)`, "%)"),
+                  vjust = ifelse(Frecuencia > max_freq/2, 1.5, -0.5),
+                  color = ifelse(Frecuencia > max_freq/2, "white", "black")), 
+              size = 4, position = position_stack(vjust = 0.5)) +
+    # Ampliar el límite del eje Y para asegurar que las etiquetas sean visibles
+    scale_y_continuous(limits = c(0, max_freq * 1.15)) +
+    labs(title = "Distribución según percepción de vida simple",
+         x = "", y = "Frecuencia") +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    scale_fill_brewer(palette = "Set2") +
+    scale_color_identity()  # Permite usar los colores definidos en aes
+  
+  print(grafico_vida_simple)
+}
+
+```
+¿Qué ve?
+
+Gráfico de tipo diagrama de caja de bigotes para la variable diagrama_horas_responsabilidades : 
+```{r}
+# Cargar librerías necesarias
+library(ggplot2)
+library(dplyr)
+
+# Función para crear el diagrama de caja para horas_semana_responsabilidades
+diagrama_horas_responsabilidades <- function(datos_limpios) {
+  # Asumimos que 'datos_limpios' es un dataframe y 'horas_semana_responsabilidades' es una columna
+  
+  # Calcular cuartiles y rango intercuartílico
+  q1_resp <- quantile(datos_limpios$horas_semana_responsabilidades, 0.25, na.rm = TRUE)
+  q3_resp <- quantile(datos_limpios$horas_semana_responsabilidades, 0.75, na.rm = TRUE)
+  iqr_resp <- q3_resp - q1_resp
+  
+  # Definir límites para valores atípicos
+  limite_inf_resp <- q1_resp - 1.5 * iqr_resp
+  limite_sup_resp <- q3_resp + 1.5 * iqr_resp
+  
+  # Identificar valores atípicos
+  atipicos_resp <- datos_limpios$horas_semana_responsabilidades < limite_inf_resp | 
+                  datos_limpios$horas_semana_responsabilidades > limite_sup_resp
+  
+  # Crear copia de los datos para no modificar los originales
+  datos_procesados <- datos_limpios
+  
+  # Reemplazar valores atípicos por la mediana
+  mediana_resp <- median(datos_limpios$horas_semana_responsabilidades, na.rm = TRUE)
+  datos_procesados$horas_semana_responsabilidades[atipicos_resp] <- mediana_resp
+  
+  # Imprimir estadísticas
+  cat("=== Estadísticas de horas_semana_responsabilidades ===\n")
+  cat("Número de valores atípicos reemplazados:", sum(atipicos_resp), "\n")
+  cat("Límite inferior para valores atípicos:", limite_inf_resp, "\n")
+  cat("Límite superior para valores atípicos:", limite_sup_resp, "\n")
+  cat("Mediana (valor de reemplazo):", mediana_resp, "\n")
+  cat("Resumen después de reemplazar valores atípicos:\n")
+  print(summary(datos_procesados$horas_semana_responsabilidades))
+  
+  # Crear diagrama de caja
+  p <- ggplot(datos_procesados, aes(y = horas_semana_responsabilidades)) +
+    geom_boxplot(fill = "#69b3a2", color = "#2d708e", width = 0.5) +
+    labs(title = "Diagrama de caja: Horas Semanales de Responsabilidades",
+         subtitle = "Valores atípicos reemplazados por la mediana",
+         y = "Horas Semanales",
+         caption = paste("Valores atípicos (n =", sum(atipicos_resp), 
+                         ") fueron reemplazados por la mediana:", round(mediana_resp, 2))) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      plot.subtitle = element_text(hjust = 0.5),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
+    ) +
+    # Añadir estadísticas en el gráfico
+    annotate("text", x = 0.6, y = quantile(datos_procesados$horas_semana_responsabilidades, 0, na.rm = TRUE), 
+             label = paste("Min:", round(min(datos_procesados$horas_semana_responsabilidades, na.rm = TRUE), 2)), hjust = 0) +
+    annotate("text", x = 0.6, y = quantile(datos_procesados$horas_semana_responsabilidades, 0.25, na.rm = TRUE), 
+             label = paste("Q1:", round(quantile(datos_procesados$horas_semana_responsabilidades, 0.25, na.rm = TRUE), 2)), hjust = 0) +
+    annotate("text", x = 0.6, y = quantile(datos_procesados$horas_semana_responsabilidades, 0.5, na.rm = TRUE), 
+             label = paste("Mediana:", round(quantile(datos_procesados$horas_semana_responsabilidades, 0.5, na.rm = TRUE), 2)), hjust = 0) +
+    annotate("text", x = 0.6, y = quantile(datos_procesados$horas_semana_responsabilidades, 0.75, na.rm = TRUE), 
+             label = paste("Q3:", round(quantile(datos_procesados$horas_semana_responsabilidades, 0.75, na.rm = TRUE), 2)), hjust = 0) +
+    annotate("text", x = 0.6, y = quantile(datos_procesados$horas_semana_responsabilidades, 1, na.rm = TRUE), 
+             label = paste("Max:", round(max(datos_procesados$horas_semana_responsabilidades, na.rm = TRUE), 2)), hjust = 0)
+  
+  # Mostrar el gráfico explícitamente
+  print(p)
+  
+  # Guardar el gráfico como archivo
+  ggsave("diagrama_caja_horas_responsabilidades.png", p, width = 8, height = 6, dpi = 300)
+  cat("Gráfico guardado como 'diagrama_caja_horas_responsabilidades.png'\n")
+  
+  # Devolver el objeto gráfico junto con los datos procesados
+  return(list(
+    grafico = p,
+    datos_procesados = datos_procesados,
+    estadisticas = list(
+      n_atipicos = sum(atipicos_resp),
+      limite_inferior = limite_inf_resp,
+      limite_superior = limite_sup_resp,
+      mediana = mediana_resp,
+      min = min(datos_procesados$horas_semana_responsabilidades, na.rm = TRUE),
+      q1 = quantile(datos_procesados$horas_semana_responsabilidades, 0.25, na.rm = TRUE),
+      q3 = quantile(datos_procesados$horas_semana_responsabilidades, 0.75, na.rm = TRUE),
+      max = max(datos_procesados$horas_semana_responsabilidades, na.rm = TRUE)
+    )
+  ))
+}
+
+# Ejemplo de uso:
+# Crear datos de ejemplo (reemplaza esto con tus datos reales)
+set.seed(123)
+datos_ejemplo <- data.frame(horas_semana_responsabilidades = c(
+  rnorm(95, mean = 25, sd = 5),  # Datos normales
+  c(5, 8, 55, 60, 65)           # Algunos valores atípicos
+))
+
+# Llamar a la función con los datos de ejemplo
+resultado <- diagrama_horas_responsabilidades(datos_ejemplo)
+
+
+```
+Gráfico de tipo diagrama de caja de bigotes para la variable nivel_satisfaccion_vida: 
+
+```{r}
+diagrama_satisfaccion_vida <- function(datos_limpios) {
+  # ------------------<--------------------------
+  # PASO 1: Validación y limpieza de datos
+  # --------------------------------------------
+  datos_limpios <- datos_limpios %>%
+    filter(
+      !is.na(nivel_satisfaccion_vida),
+      is.numeric(nivel_satisfaccion_vida),
+      nivel_satisfaccion_vida >= 0,
+      nivel_satisfaccion_vida <= 10
+    )
+  
+  # --------------------------------------------
+  # PASO 2: Cálculo de estadísticas
+  # --------------------------------------------
+  q1_sat <- quantile(datos_limpios$nivel_satisfaccion_vida, 0.25, na.rm = TRUE)
+  q3_sat <- quantile(datos_limpios$nivel_satisfaccion_vida, 0.75, na.rm = TRUE)
+  iqr_sat <- q3_sat - q1_sat
+  
+  # Límites IQR ajustados al rango 0-10
+  limite_inf_sat <- ifelse(
+    (q1_sat - 1.5 * iqr_sat) < 0, 
+    0, 
+    q1_sat - 1.5 * iqr_sat
+  )
+  
+  limite_sup_sat <- ifelse(
+    (q3_sat + 1.5 * iqr_sat) > 10, 
+    10, 
+    q3_sat + 1.5 * iqr_sat
+  )
+  
+  # --------------------------------------------
+  # PASO 3: Manejo de valores atípicos
+  # --------------------------------------------
+  atipicos_sat <- datos_limpios$nivel_satisfaccion_vida < limite_inf_sat | 
+    datos_limpios$nivel_satisfaccion_vida > limite_sup_sat
+  
+  datos_procesados <- datos_limpios
+  mediana_sat <- median(datos_limpios$nivel_satisfaccion_vida, na.rm = TRUE)
+  datos_procesados$nivel_satisfaccion_vida[atipicos_sat] <- mediana_sat
+  
+  # --------------------------------------------
+  # PASO 4: Generación del gráfico
+  # --------------------------------------------
+  p <- ggplot(datos_procesados, aes(y = nivel_satisfaccion_vida, x = factor(1))) +
+    geom_boxplot(
+      fill = "#4C72B0",
+      color = "#1A4E8C",
+      width = 0.5,
+      outlier.color = "red",
+      outlier.size = 2
+    ) +
+    labs(
+      title = "Diagrama de caja: Nivel de Satisfacción con la Vida",
+      subtitle = "Valores atípicos reemplazados por la mediana",
+      y = "Nivel de Satisfacción (0-10)",
+      x = "",
+      caption = paste(
+        "Valores atípicos (n =", sum(atipicos_sat),
+        "| Mediana:", round(mediana_sat, 2),
+        "\nLímites IQR: [", round(limite_inf_sat, 2), ",", round(limite_sup_sat, 2), "]"
+      )
+    ) +
+    theme_minimal() +
+    scale_y_continuous(
+      limits = c(0, 10),
+      breaks = seq(0, 10, 1)
+    ) +
+    annotate(
+      "text",
+      x = 1,
+      y = c(
+        min(datos_procesados$nivel_satisfaccion_vida),
+        quantile(datos_procesados$nivel_satisfaccion_vida, 0.25),
+        median(datos_procesados$nivel_satisfaccion_vida),
+        quantile(datos_procesados$nivel_satisfaccion_vida, 0.75),
+        max(datos_procesados$nivel_satisfaccion_vida)
+      ),
+      label = paste(
+        c("Mín:", "Q1:", "Mediana:", "Q3:", "Máx:"),
+        round(c(
+          min(datos_procesados$nivel_satisfaccion_vida),
+          quantile(datos_procesados$nivel_satisfaccion_vida, 0.25),
+          median(datos_procesados$nivel_satisfaccion_vida),
+          quantile(datos_procesados$nivel_satisfaccion_vida, 0.75),
+          max(datos_procesados$nivel_satisfaccion_vida)
+        ), 2)
+      ),
+      hjust = 0,
+      size = 3.5
+    ) +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+  
+  print(p)
+  return(list(
+    datos_procesados = datos_procesados,
+    estadisticas = list(
+      n_atipicos = sum(atipicos_sat),
+      limite_inferior = limite_inf_sat,
+      limite_superior = limite_sup_sat,
+      mediana = mediana_sat
+    )
+  ))
+}
+
+# --------------------------------------------
+# EJEMPLO DE USO CORREGIDO (SINTAXIS VÁLIDA)
+# --------------------------------------------
+set.seed(123)
+datos_prueba <- data.frame(
+  nivel_satisfaccion_vida = c(
+    rnorm(95, mean = 5, sd = 2),  # Valores normales
+    c(0.5, 9.8, -2, 11, NA)       # Valores límite y no válidos
+  )
+)
+
+resultado <- diagrama_satisfaccion_vida(datos_prueba)
+
+# Mostrar estadísticas
+cat("=== RESUMEN ESTADÍSTICO ===\n")
+cat("Valores originales:", nrow(datos_prueba), "\n")
+cat("Valores válidos después de limpieza:", nrow(resultado$datos_procesados), "\n")
+cat("Valores atípicos detectados:", resultado$estadisticas$n_atipicos, "\n")
+cat("Mediana final:", resultado$estadisticas$mediana, "\n")
+
+```
+
+
+Que ve?:
+
+Gráfico de tipo diagrama de caja de bigotes para la variable tiempo_libre_semanal: 
+
+```{r}
+library(ggplot2)
+library(dplyr)
+# --------------------------------------------
+# Función para boxplots con manejo de outliers y valores negativos
+# --------------------------------------------
+crear_boxplot <- function(data, variable, titulo) {
+  # Guardar una copia de los datos originales
+  data_original <- data
+  
+  # Calcular la media de la variable (excluyendo NA)
+  media_variable <- mean(data[[variable]], na.rm = TRUE)
+  
+  # Reemplazar valores negativos con la media
+  data_limpio <- data %>%
+    mutate(!!variable := ifelse(.data[[variable]] < 0, media_variable, .data[[variable]]))
+  
+  # Imprimir información sobre la limpieza
+  n_negativos <- sum(data_original[[variable]] < 0, na.rm = TRUE)
+  if (n_negativos > 0) {
+    cat(paste("Se reemplazaron", n_negativos, "valores negativos por la media:", round(media_variable, 2), "\n"))
+  }
+  
+  # Calcular estadísticas para identificar outliers
+  q1 <- quantile(data_limpio[[variable]], 0.25, na.rm = TRUE)
+  q3 <- quantile(data_limpio[[variable]], 0.75, na.rm = TRUE)
+  iqr <- q3 - q1
+  
+  limite_inf <- q1 - 1.5 * iqr
+  limite_sup <- q3 + 1.5 * iqr
+  
+  # Eliminar valores extremos (outliers)
+  data_limpio <- data_limpio %>%
+    filter(.data[[variable]] >= limite_inf & .data[[variable]] <= limite_sup)
+  
+  # Crear un boxplot vertical (orientación correcta)
+  ggplot(data_limpio, aes(x = factor(""), y = .data[[variable]])) +
+    geom_boxplot(fill = "#69b3a2", 
+                color = "#2d708e",
+                width = 0.5) +  # Ancho del boxplot
+    labs(title = titulo, 
+         y = "Horas por semana",
+         x = "") +  # Eliminar etiqueta del eje X
+    scale_y_continuous(
+      limits = c(0, max(data_limpio[[variable]])*1.1),
+      breaks = seq(0, ceiling(max(data_limpio[[variable]])*1.1), by = 5)  # Marcas cada 5 horas
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+      axis.text.x = element_blank(),  # Eliminar texto del eje X
+      axis.ticks.x = element_blank(),  # Eliminar marcas del eje X
+      plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+    )
+}
+
+# --------------------------------------------
+# Generar el boxplot para tiempo_libre_semanal
+# --------------------------------------------
+
+# Para asegurar que el código funcione correctamente, veamos primero 
+# un resumen de la variable tiempo_libre_semanal
+cat("Resumen de la variable tiempo_libre_semanal:\n")
+summary(datos_limpios$tiempo_libre_semanal)
+
+# Generar el boxplot
+g5 <- crear_boxplot(datos_limpios, 
+                   "tiempo_libre_semanal", 
+                   "Tiempo Libre (h/sem)")
+
+# Visualizar el gráfico individualmente
+print(g5)
+```
+
+
+Que ve?:|
+
+# Planteamiento de hipótesis
+
+***¿Las personas con hijos tienen un nivel de satisfacción subjetiva diferente a las personas sin hijos?***
+por la naturaleza de las variables usaremos la preuba t 
+Ho: No hay diferencia en el nivel de satisfacción de vida entre personas con hijos y sin hijos
+H1: Hay una diferencia en el nivel de satisfacción de vida entre personas con hijos y sin hijos
+
+```{r}
+# Cargar las bibliotecas necesarias
+library(dplyr)
+library(readr)  # Para leer archivos CSV
+
+# Cargar el dataset
+# Asegúrate de usar la ruta correcta a tu archivo
+datos_limpios <- read.csv("C:/Users/jacob/OneDrive/Escritorio/base_bienestar_subjetivo.csv")
+
+# Examinar los nombres de las columnas para verificar
+print("Nombres de columnas disponibles:")
+print(names(datos_limpios))
+
+# Variables para la prueba t
+variable_satisfaccion <- "nivel_satisfaccion_vida"
+variable_hijos <- "hijos"
+
+# Verificar que estas columnas existen
+print(paste("¿La columna", variable_satisfaccion, "existe?", variable_satisfaccion %in% names(datos_limpios)))
+print(paste("¿La columna", variable_hijos, "existe?", variable_hijos %in% names(datos_limpios)))
+
+# Verificar que no hay valores NA en las variables de interés
+print(paste("Valores NA en", variable_satisfaccion, ":", sum(is.na(datos_limpios[[variable_satisfaccion]]))))
+print(paste("Valores NA en", variable_hijos, ":", sum(is.na(datos_limpios[[variable_hijos]]))))
+
+# Verificar los valores únicos en la variable de hijos
+print("Valores únicos en la variable de hijos:")
+print(unique(datos_limpios[[variable_hijos]]))
+
+
+
+# Crear la fórmula para el test t
+formula_test <- as.formula(paste(variable_satisfaccion, "~", variable_hijos))
+print(paste("Fórmula usada:", deparse(formula_test)))
+
+# Realizar prueba t de Student para muestras independientes
+resultado <- t.test(formula_test, data = datos_limpios)
+
+# Mostrar el resultado completo de la prueba t
+print("Resultado de la prueba t:")
+print(resultado)
+
+# Determinar si se acepta o no la hipótesis nula
+p_valor <- resultado$p.value
+alpha <- 0.05
+print(paste("Valor p:", p_valor, "- Nivel de significancia (alpha):", alpha))
+
+if (p_valor < alpha) {
+  print("Se rechaza la hipótesis nula. Hay una diferencia significativa en el nivel de satisfacción de vida entre personas con hijos y sin hijos.")
+  
+  # Identificar los valores que representan "con hijos" y "sin hijos"
+  # Ajusta estos valores según lo que veas en unique(datos_limpios[[variable_hijos]])
+  valores_hijos <- unique(datos_limpios[[variable_hijos]])
+  print(paste("Valores identificados para hijos:", paste(valores_hijos, collapse = ", ")))
+  
+  # Calcular y mostrar las medias para cada grupo
+  for(valor in valores_hijos) {
+    media_grupo <- mean(datos_limpios[[variable_satisfaccion]][datos_limpios[[variable_hijos]] == valor], na.rm = TRUE)
+    print(paste("Media de nivel de satisfacción de vida (", valor, "):", round(media_grupo, 2)))
+  }
+  
+} else {
+  print("No se rechaza la hipótesis nula. No hay evidencia suficiente para concluir que hay una diferencia en el nivel de satisfacción de vida entre personas con hijos y sin hijos.")
+}
+```
+
+Se rechaza la hipotesis nula ya que el p valor es menor a nuestro alpha 
+
+
+# Resultados y conclusiones
+
+Se permite afirmar que existe una diferencia asociada a tener hijos en la satisfacción subjetiva ya que la prueba t no es concluyente 
+
+
+
+***¿Las personas con más responsabilidades semanales tienen menor satisfacción?***
+

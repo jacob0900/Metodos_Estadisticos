@@ -1,0 +1,109 @@
+---
+title: "TAREA Final"
+output: html_document
+date: "2025-11-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(fst)
+```
+
+# Clase
+```{r}
+df =  read_fst("C:/Users/jacob/OneDrive/Escritorio/Datasets/taiwan_real_estate (3).fst")
+
+head(df)
+str(df)
+```
+
+```{r}
+# muestrar los valores de la variable house_age_years
+unique(df$house_age_years)
+```
+
+```{r}
+ #grafico del precio segun la antiguedad
+df %>% 
+  ggplot(aes(price_twd_msq))+
+  geom_histogram(bins=10)+
+  facet_grid(df$house_age_year)+
+  theme_bw()
+
+df %>% 
+  group_by(house_age_years) %>% 
+  summarise(mean=mean(price_twd_msq),
+            sd= sd(price_twd_msq))
+
+df_anova= df %>% 
+  select(price_twd_msq, house_age_years)
+
+anova= aov(price_twd_msq ~ house_age_years,
+    data=df_anova)
+
+# anova para evaluar potenciales diferencias entre los grupos
+summary(anova)
+
+# Apliacamos Tukey para saber que grupo es el distinto 
+# controlar el error tipo 1
+TukeyHSD(anova)
+```
+
+```{r}
+df<- df %>% 
+  mutate(house_age_years=factor(house_age_years,
+         levels=levels(house_age_years), 
+         ordered = FALSE))
+str(df)
+rlm_precio_vs_age= lm(price_twd_msq~house_age_years, data=df)
+summary(rlm_precio_vs_age)
+
+#modelo nulo y completo-----
+modelo_nulo= lm(price_twd_msq~1, data=df)
+modelo_completo=lm(price_twd_msq~., data=df)
+summary(modelo_completo)
+summary(modelo_nulo)
+```
+
+# Tarea
+```{r}
+library(emmeans)
+
+df <- df %>%
+  mutate(
+    MediumAge = if_else(house_age_years == "15 to 30", 1, 0),
+    OldAge    = if_else(house_age_years == "30 to 45", 1, 0)
+  ) %>%
+  select(-house_age_years)
+
+summary_stats <- df %>% 
+  group_by(MediumAge, OldAge) %>% 
+  summarize(mean_by_group = mean(price_twd_msq),
+            sd = sd(price_twd_msq))
+
+summary_stats
+
+df_anova = df%>%
+  select(price_twd_msq, MediumAge, OldAge)
+
+matriz <- model.matrix(~ MediumAge + OldAge, data = df)
+matriz
+
+anova = aov(price_twd_msq ~ MediumAge + OldAge, data = df_anova)
+emmeans(anova, pairwise ~ MediumAge + OldAge)
+summary(anova)
+
+# Dummy modelos
+lm_precio_vs_dummys = lm(price_twd_msq ~ MediumAge + OldAge, data = df)
+summary(lm_precio_vs_dummys)
+
+modelo_null = lm(price_twd_msq ~ 1, data = df)
+modelo_full = lm(price_twd_msq ~ ., data = df)
+summary(modelo_null)
+summary(modelo_full)
+```
+
+
+
+Los dos métodos (dummy y factor) generan los mismos resultados estadísticos. Sin embargo, trabajar con factores es más conveniente porque el código es más ordenado, reduce la posibilidad de cometer errores y permite usar directamente herramientas como TUKEY y EMMEANS sin tener que transformar las variables nuevamente.

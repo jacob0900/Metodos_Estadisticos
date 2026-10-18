@@ -1,0 +1,157 @@
+---
+title: "Tarea#5"
+output: html_document
+date: "2025-09-17"
+---
+
+## Cargar la data 
+
+
+
+```{r }
+
+df <- matrix(c(4200, 370,
+               3600, 340,
+               3750, 375,
+               3675, 310,
+               4050, 350,
+               2770, 200,
+               4870, 400,
+               4500, 375,
+               3450, 285,
+               2700, 225,
+               3750, 345,
+               3300, 285),
+             nrow = 12, byrow = TRUE,
+             dimnames = list(
+               NULL,
+               c("tiempoA", "tiempoB")
+             ))
+```
+
+## Punto 1 
+Calcule e interprete el valor del coeficiente de correlación muestral  r
+
+
+```{r}
+x <- df[, "tiempoA"]
+y <- df[, "tiempoB"]
+n <- nrow(df)
+ybar<- mean(y)
+xbar <- mean(x)
+
+a<- x-xbar
+b<- y - ybar
+
+Sxy <- sum(a*b)
+Sxx<- sum(a^2)
+Syy <- sum(b^2)
+
+r <- Sxy/sqrt(Sxx*Syy)
+print(r)
+```
+
+Como podemos observar hay una clara relacion entre el tiempode vida de los bombillos A y los bombillos B 
+## Punto 2 
+¿Cómo cambiaría el valor de  r si x es el tiempo del bombillo de marca B y  y, el del bombillo de marca A?
+ 
+```{r}
+df <- matrix(c(4200, 370,
+               3600, 340,
+               3750, 375,
+               3675, 310,
+               4050, 350,
+               2770, 200,
+               4870, 400,
+               4500, 375,
+               3450, 285,
+               2700, 225,
+               3750, 345,
+               3300, 285),
+             nrow = 12, byrow = TRUE,
+             dimnames = list(
+               NULL,
+               c("tiempoA", "tiempoB")
+             ))
+
+x1 <- df[, "tiempoB"]
+y1 <- df[, "tiempoA"]
+ybar1<- mean(y1)
+xbar1 <- mean(x1)
+
+a1<- x1-xbar1
+b1<- y1 - ybar1
+
+Sxy1 <- sum(a1*b1)
+Sxx1<- sum(a1^2)
+Syy1 <- sum(b1^2)
+
+r1 <- Sxy1/sqrt(Sxx1*Syy1)
+print(r1)
+```
+El cambio de variable no afecta el valor del coefiente muestral 
+
+## Punto 3
+
+¿Cómo cambiaría el valor de  r si el tiempo y se expresara en horas en lugar de minutos?
+```{r}
+df_minutos <- df*60 
+
+x2 <- df_minutos[, "tiempoA"]
+y2 <- df_minutos[, "tiempoB"]
+ybar2<- mean(y2)
+xbar2 <- mean(x2)
+
+a2<- x2-xbar2
+b2<- y2 - ybar2
+
+Sxy2 <- sum(a2*b2)
+Sxx2<- sum(a2^2)
+Syy2 <- sum(b2^2)
+
+r2 <- Sxy2/sqrt(Sxx2*Syy2)
+print(r2)
+
+```
+
+El cambio de la esacala de las variables no afecta el valor del coefiente muestral 
+ 
+## Punto 4
+
+```{r}
+# Con tus datos
+tiempoA <- df[, "tiempoA"] 
+tiempoB <- df[, "tiempoB"]
+
+# Crear Q-Q plots
+par(mfrow=c(1,2))
+qqnorm(tiempoA, main="Q-Q Plot - TiempoA")
+qqline(tiempoA, col="red")
+
+qqnorm(tiempoB, main="Q-Q Plot - TiempoB") 
+qqline(tiempoB, col="red")
+```
+
+Los datos claramente presentan un comportamiento normal 
+
+
+## Punto 5 
+Realice una prueba de hipótesis para decidir si el tiempo  x y el tiempo y están correlacionados linealmente.
+
+```{r}
+print ("H0: p=0 y H1:  p != 0")
+gl = n-2
+alpha = 0.05
+t0 <- abs(r*sqrt(n-2)/sqrt(1-r^2))
+t_crit <- qt(1-alpha/2, df = gl)
+if(t0>t_crit){
+  print("se rechaza H0")
+}else{
+  print("no se rechaza H0")
+}
+```
+
+Podemos afirmar con un 0.05 de significancia estadistica que hay una corelacion lineal entre las variables  
+
+ 
+ 

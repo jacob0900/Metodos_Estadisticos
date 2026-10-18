@@ -1,0 +1,294 @@
+---
+title: "Guía de Gráficos según Tipo de Datos - Variables Personalizables"
+author: "Tu Nombre"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(ggplot2)
+library(dplyr)
+```
+
+# Guía de Gráficos según Tipo de Datos
+
+Esta guía te muestra qué tipo de gráfico usar según los datos que tengas. **Las variables en los comentarios # <<< CAMBIAR son las que debes modificar.**
+
+## 1. Para datos categóricos (Variable Cualitativa)
+
+### Tabla de Frecuencia - Barras simples o Pastel
+
+**Cuándo usar:** Cuando solo quieres contar cuántos hay de cada categoría (como colores, marcas, profesiones).
+
+```{r}
+# Crear datos de ejemplo
+# CAMBIAR: Reemplaza estos valores por tus categorías
+colores <- c("Rojo", "Azul", "Verde", "Rojo", "Azul", "Rojo", "Verde", "Verde", "Azul", "Rojo")  # <<< CAMBIAR
+df_colores <- data.frame(color = colores)  # <<< CAMBIAR: df_colores y color
+
+# Gráfico de barras simple
+# CAMBIAR: df_colores por tu dataframe, color por tu variable
+ggplot(df_colores, aes(x = color)) +  # <<< CAMBIAR: df_colores y color
+  geom_bar(fill = c("red", "blue", "green"), alpha = 0.7) +
+  labs(title = "Frecuencia de Colores",  # <<< CAMBIAR: título
+       x = "Color",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Frecuencia") +
+  theme_minimal()
+```
+
+```{r}
+# Gráfico de pastel
+# CAMBIAR: df_colores por tu dataframe, color por tu variable
+conteo_colores <- df_colores %>%  # <<< CAMBIAR: conteo_colores y df_colores
+  count(color) %>%  # <<< CAMBIAR: color
+  mutate(porcentaje = n/sum(n)*100)
+
+ggplot(conteo_colores, aes(x = "", y = n, fill = color)) +  # <<< CAMBIAR: conteo_colores y color
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  scale_fill_manual(values = c("red", "blue", "green")) +
+  labs(title = "Distribución de Colores") +  # <<< CAMBIAR: título
+  theme_void()
+```
+
+## 2. Para datos numéricos agrupados (Variable Cuantitativa)
+
+### Tabla de Frecuencia - Histograma
+
+**Cuándo usar:** Cuando los números están en rangos (como edades 20-30, 30-40) o quieres ver la distribución de datos continuos.
+
+```{r}
+# Crear datos de ejemplo - edades
+set.seed(123)
+edades <- rnorm(100, mean = 30, sd = 8)  # <<< CAMBIAR: edades
+df_edades <- data.frame(edad = edades)  # <<< CAMBIAR: df_edades y edad
+
+# Histograma
+# CAMBIAR: df_edades por tu dataframe, edad por tu variable numérica
+ggplot(df_edades, aes(x = edad)) +  # <<< CAMBIAR: df_edades y edad
+  geom_histogram(bins = 15, fill = "skyblue", color = "black", alpha = 0.7) +
+  labs(title = "Distribución de Edades",  # <<< CAMBIAR: título
+       x = "Edad",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Frecuencia") +
+  theme_minimal()
+```
+
+## 3. Para comparar dos variables categóricas
+
+### Tabla de Asociación - Barras compuestas o superpuestas
+
+**Cuándo usar:** Para comparar dos tipos de categorías (como género vs profesión).
+
+```{r}
+# Crear datos de ejemplo
+genero <- rep(c("Masculino", "Femenino"), each = 50)  # <<< CAMBIAR: genero y valores
+profesion <- sample(c("Ingeniero", "Doctor", "Profesor", "Artista"), 100, replace = TRUE)  # <<< CAMBIAR: profesion y valores
+df_asociacion <- data.frame(genero = genero, profesion = profesion)  # <<< CAMBIAR: df_asociacion, genero, profesion
+
+# Barras compuestas (agrupadas)
+# CAMBIAR: df_asociacion, profesion, genero por tus variables
+ggplot(df_asociacion, aes(x = profesion, fill = genero)) +  # <<< CAMBIAR: df_asociacion, profesion, genero
+  geom_bar(position = "dodge", alpha = 0.7) +
+  labs(title = "Profesión por Género",  # <<< CAMBIAR: título
+       x = "Profesión",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Frecuencia",
+       fill = "Género") +  # <<< CAMBIAR: etiqueta de la leyenda
+  theme_minimal()
+```
+
+```{r}
+# Barras superpuestas (apiladas)
+# CAMBIAR: df_asociacion, profesion, genero por tus variables
+ggplot(df_asociacion, aes(x = profesion, fill = genero)) +  # <<< CAMBIAR: df_asociacion, profesion, genero
+  geom_bar(position = "stack", alpha = 0.7) +
+  labs(title = "Profesión por Género (Apilado)",  # <<< CAMBIAR: título
+       x = "Profesión",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Frecuencia",
+       fill = "Género") +  # <<< CAMBIAR: etiqueta de la leyenda
+  theme_minimal()
+```
+
+## 4. Para una variable categórica y una cuantitativa discreta
+
+### Barras compuestas/superpuestas
+
+**Cuándo usar:** Cuando tienes categorías con números separados (como ventas por mes).
+
+```{r}
+# Crear datos de ejemplo - ventas por mes y categoría
+meses <- rep(c("Ene", "Feb", "Mar", "Abr"), each = 3)  # <<< CAMBIAR: meses y valores
+categoria <- rep(c("A", "B", "C"), 4)  # <<< CAMBIAR: categoria y valores
+ventas <- c(120, 150, 90, 140, 160, 110, 130, 180, 120, 160, 190, 140)  # <<< CAMBIAR: ventas
+df_ventas <- data.frame(mes = meses, categoria = categoria, ventas = ventas)  # <<< CAMBIAR: df_ventas, mes, categoria, ventas
+
+# Barras compuestas
+# CAMBIAR: df_ventas, mes, ventas, categoria por tus variables
+ggplot(df_ventas, aes(x = mes, y = ventas, fill = categoria)) +  # <<< CAMBIAR: df_ventas, mes, ventas, categoria
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+  labs(title = "Ventas por Mes y Categoría",  # <<< CAMBIAR: título
+       x = "Mes",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Ventas",  # <<< CAMBIAR: etiqueta del eje y
+       fill = "Categoría") +  # <<< CAMBIAR: etiqueta de la leyenda
+  theme_minimal()
+```
+
+## 5. Para una variable categórica y una cuantitativa continua
+
+### Polígono de Frecuencia o Box Plot
+
+**Cuándo usar:** Para una categoría con números continuos (como temperatura a lo largo del día).
+
+```{r}
+# Crear datos de ejemplo - temperatura por estación
+set.seed(123)
+estacion <- rep(c("Primavera", "Verano", "Otoño", "Invierno"), each = 30)  # <<< CAMBIAR: estacion y valores
+temperatura <- c(rnorm(30, 20, 3), rnorm(30, 30, 4), rnorm(30, 15, 3), rnorm(30, 5, 2))  # <<< CAMBIAR: temperatura
+df_temp <- data.frame(estacion = estacion, temperatura = temperatura)  # <<< CAMBIAR: df_temp, estacion, temperatura
+
+# Box Plot
+# CAMBIAR: df_temp, estacion, temperatura por tus variables
+ggplot(df_temp, aes(x = estacion, y = temperatura, fill = estacion)) +  # <<< CAMBIAR: df_temp, estacion, temperatura
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Distribución de Temperatura por Estación",  # <<< CAMBIAR: título
+       x = "Estación",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Temperatura (°C)") +  # <<< CAMBIAR: etiqueta del eje y
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r}
+# Polígono de frecuencia (usando geom_freqpoly)
+# CAMBIAR: df_temp, temperatura, estacion por tus variables
+ggplot(df_temp, aes(x = temperatura, color = estacion)) +  # <<< CAMBIAR: df_temp, temperatura, estacion
+  geom_freqpoly(bins = 15, size = 1.2) +
+  labs(title = "Polígono de Frecuencia - Temperatura por Estación",  # <<< CAMBIAR: título
+       x = "Temperatura (°C)",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Frecuencia",
+       color = "Estación") +  # <<< CAMBIAR: etiqueta de la leyenda
+  theme_minimal()
+```
+
+## 6. Para dos variables cuantitativas
+
+### Diagrama de Puntos (Scatter Plot)
+
+**Cuándo usar:** Cuando quieres ver la relación entre dos números (como altura vs peso).
+
+```{r}
+# Crear datos de ejemplo - altura vs peso
+set.seed(123)
+altura <- rnorm(50, 170, 10)  # <<< CAMBIAR: altura
+peso <- 0.8 * altura + rnorm(50, -110, 5)  # <<< CAMBIAR: peso (ajustar fórmula según tus datos)
+df_scatter <- data.frame(altura = altura, peso = peso)  # <<< CAMBIAR: df_scatter, altura, peso
+
+# Diagrama de puntos
+# CAMBIAR: df_scatter, altura, peso por tus variables
+ggplot(df_scatter, aes(x = altura, y = peso)) +  # <<< CAMBIAR: df_scatter, altura, peso
+  geom_point(color = "steelblue", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "red", linetype = "dashed") +
+  labs(title = "Relación entre Altura y Peso",  # <<< CAMBIAR: título
+       x = "Altura (cm)",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Peso (kg)") +  # <<< CAMBIAR: etiqueta del eje y
+  theme_minimal()
+```
+
+## 🔧 GUÍA RÁPIDA DE PERSONALIZACIÓN
+
+### Para adaptar a tus datos:
+
+**1. Busca los comentarios `# <<< CAMBIAR` y modifica:**
+- Nombres de dataframes: `df_colores`, `df_edades`, etc.
+- Nombres de variables: `color`, `edad`, `genero`, etc.
+- Títulos y etiquetas en `labs()`
+
+**2. Si usas tus propios datos, reemplaza la sección de creación de datos con:**
+```r
+# Cargar tus datos
+tu_dataframe <- read.csv("tu_archivo.csv")
+# o usa tu dataframe existente directamente
+```
+
+**3. Ejemplo de personalización:**
+```r
+# Original:
+ggplot(df_colores, aes(x = color)) +
+
+# Personalizado:
+ggplot(mis_datos, aes(x = marca_producto)) +
+```
+
+## 7. Análisis Univariado - Una sola variable
+
+### Para análisis de una sola variable
+
+**Cuándo usar:** Cuando solo quieres analizar el comportamiento de UNA variable por sí sola.
+
+```{r}
+# Para variable categórica - Tabla de frecuencias
+mi_variable <- c("A", "B", "C", "A", "B", "A", "C", "C", "B", "A")  # <<< CAMBIAR: mi_variable
+df_univariado <- data.frame(categoria = mi_variable)  # <<< CAMBIAR: df_univariado y categoria
+
+# Tabla de frecuencias
+tabla_freq <- table(df_univariado$categoria)  # <<< CAMBIAR: df_univariado y categoria
+print("Tabla de frecuencias:")
+print(tabla_freq)
+
+# Tabla de frecuencias relativas (porcentajes)
+tabla_freq_rel <- prop.table(tabla_freq) * 100
+print("Tabla de frecuencias relativas (%):")
+print(round(tabla_freq_rel, 2))
+```
+
+```{r}
+# Para variable numérica - Estadísticas descriptivas
+set.seed(123)
+mi_variable_num <- rnorm(50, mean = 25, sd = 5)  # <<< CAMBIAR: mi_variable_num
+df_num_univariado <- data.frame(valor = mi_variable_num)  # <<< CAMBIAR: df_num_univariado y valor
+
+# Estadísticas descriptivas
+print("Estadísticas descriptivas:")
+summary(df_num_univariado$valor)  # <<< CAMBIAR: df_num_univariado y valor
+
+# Estadísticas adicionales
+print(paste("Desviación estándar:", round(sd(df_num_univariado$valor), 2)))  # <<< CAMBIAR: df_num_univariado y valor
+print(paste("Varianza:", round(var(df_num_univariado$valor), 2)))  # <<< CAMBIAR: df_num_univariado y valor
+```
+
+```{r}
+# Gráficos para análisis univariado de variable numérica
+# Histograma con línea de densidad
+ggplot(df_num_univariado, aes(x = valor)) +  # <<< CAMBIAR: df_num_univariado y valor
+  geom_histogram(aes(y = ..density..), bins = 15, fill = "lightblue", 
+                 color = "black", alpha = 0.7) +
+  geom_density(color = "red", size = 1.2) +
+  labs(title = "Análisis Univariado - Histograma con Densidad",  # <<< CAMBIAR: título
+       x = "Valor",  # <<< CAMBIAR: etiqueta del eje x
+       y = "Densidad") +
+  theme_minimal()
+```
+
+```{r}
+# Box plot univariado (para detectar outliers)
+ggplot(df_num_univariado, aes(y = valor)) +  # <<< CAMBIAR: df_num_univariado y valor
+  geom_boxplot(fill = "lightgreen", alpha = 0.7, width = 0.5) +
+  labs(title = "Análisis Univariado - Box Plot",  # <<< CAMBIAR: título
+       y = "Valor") +  # <<< CAMBIAR: etiqueta del eje y
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+## Resumen - Regla Simple
+
+- **¿Una sola variable categórica?** → Tabla de frecuencias + Barras o pastel
+- **¿Una sola variable numérica?** → Estadísticas descriptivas + Histograma + Box plot
+- **¿Solo categorías (dos o más)?** → Barras o pastel
+- **¿Solo números continuos?** → Histograma  
+- **¿Quieres comparar grupos?** → Barras compuestas
+- **¿Relación entre dos números?** → Puntos (scatter plot)
+- **¿Distribución por grupos?** → Box plot
+
+---
+
+*Esta guía te ayudará a elegir el gráfico correcto según tus datos. ¡Solo busca los comentarios # <<< CAMBIAR y modifica las variables!*

@@ -1,0 +1,152 @@
+---
+title: "Punto 2 del taller"
+output: html_document
+date: "2025-04-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Enunciado
+
+Un estudio de una empresa especializada analiza si el tiempo promedio que los
+usuarios pasan en una nueva plataforma de aprendizaje en línea es mayor a 45 minutos
+por sesión. Se recopilaron datos de 200 sesiones, con un promedio muestral de 47.2
+minutos y una desviación estándar poblacional conocida de 8 minutos
+
+
+
+```{r}
+
+```
+
+## Punto 1.1
+Calcular el intervalo de confianza del 95% para la media poblacional.
+
+
+
+
+
+
+```{r}
+#Datos que me brinda el ejercicico 
+x_barra <- 47.2       # media muestral
+desv_est <- 8      # desviación estándar poblacional
+n <- 200        # tamaño de muestra
+alpha <- 0.05    #error
+alpha_medios<-0.025  
+
+```
+
+Nos percatamos de que nuestra funcion sigue una distrucion normal por lo que nesesitamos hallar Z_alpha_2
+
+
+
+
+```{r}
+
+z_alpha_2 <- qnorm(0.025, lower.tail = FALSE) #El valor de Z para alpha/2
+z_alpha_2
+```
+
+Y ahora calculamos los intervalos de confianza 
+```{r}
+error <- desv_est / sqrt(n)
+
+ic_izquierda <- x_barra - z_alpha_2 * error
+ic_derecha <- x_barra + z_alpha_2 * error
+
+c(ic_izquierda, ic_derecha) 
+```
+## Punto 1.2
+Realizar una prueba de hipótesis con una significancia del 5% para determinar si la
+media poblacional del tiempo en la plataforma nueva es mayor que 45 minutos.
+
+Tendremos que calcular z_alpha y z_0, despues plantear la prueba de hipotesis 
+```{r}
+media_poblacional<-45
+Z_0<-(x_barra - media_poblacional )/error
+Z_0
+z_alpha <- qnorm(0.05, lower.tail = FALSE)
+```
+Nuestras Hpotesis seran las siguientes:
+(El area azul sera la zona de rechazo y la blanca de aceptacion de H_0)
+
+H_0: Miu =< 45
+
+H_1: Miu> 45
+```{r}
+
+# Cargamos la librería ggplot2 para crear gráficos avanzados
+library(ggplot2)
+
+# Calculamos los valores necesarios
+z_alpha <- qnorm(0.05, lower.tail = FALSE)  # Valor crítico para alpha = 0.05
+Z_0 <- (47.2 - 45) / (8 / sqrt(200))        # Tu estadístico Z_0
+
+# Determinamos el rango del eje X para asegurar que Z_0 sea visible
+# Añadimos un margen adicional para que se vea bien
+x_max <- max(6, Z_0 + 0.5)
+x_min <- min(-4, Z_0 - 6)
+
+# Creamos una función para la densidad normal
+normal_density <- function(x) {
+  dnorm(x)
+}
+
+# Creamos un dataframe con los valores de x y la densidad correspondiente
+x_values <- seq(x_min, x_max, length.out = 1000)
+df <- data.frame(
+  x = x_values,
+  y = normal_density(x_values)
+)
+
+# Creamos otro dataframe para el área sombreada (desde z_alpha hasta el final)
+shade_data <- data.frame(
+  x = seq(z_alpha, x_max, length.out = 500),
+  y = normal_density(seq(z_alpha, x_max, length.out = 500))
+)
+
+# Calculamos el área para mostrar en la leyenda
+area <- 1 - pnorm(z_alpha)
+
+# Creamos el gráfico con ggplot2
+p <- ggplot(df, aes(x = x, y = y)) +
+  geom_line(size = 1.2) +
+  geom_area(data = shade_data, aes(x = x, y = y), fill = "skyblue", alpha = 0.5) +
+  geom_vline(xintercept = z_alpha, linetype = "dashed", color = "blue", size = 1) +
+  geom_vline(xintercept = Z_0, linetype = "dashed", color = "red", size = 1) +
+  geom_text(aes(x = z_alpha, y = 0.05, label = paste("z_alpha =", round(z_alpha, 3))), 
+            color = "blue", hjust = -0.2) +
+  geom_text(aes(x = Z_0, y = 0.1, label = paste("Z_0 =", round(Z_0, 3))), 
+            color = "red", hjust = 1.2) + # Ajustado hjust para que la etiqueta no se salga del gráfico
+  geom_text(aes(x = 3, y = 0.15, 
+                label = paste("Área =", round(area, 4))), 
+            color = "darkblue") +
+  labs(title = "Distribución Normal Estándar",
+       subtitle = paste("Área sombreada = α =", round(area, 4), 
+                        "| Z_0 =", round(Z_0, 3)),
+       x = "z",
+       y = "Densidad") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5)) +
+  # Establecemos límites explícitos para el eje X
+  scale_x_continuous(limits = c(x_min, x_max),
+                     breaks = seq(round(x_min), round(x_max), by = 1))
+
+# Mostramos el gráfico
+print(p)
+```
+
+Como podemos ver es claro que nuestro Z_0 cayo en la zona de rechazo por lo que H_1 sera verdadera 
+
+
+
+## Punto 1.3
+Analizar los resultados ¿cómo quedó el intervalo de confianza? ¿Existe suficiente
+evidencia estadística para afirmar que los usuarios pasan en la nueva plataforma más
+de 45 minutos en promedio.
+
+El intervalo de confianza del 95% calculado (46.09, 48.31) se encuentra completamente por encima de 45 minutos. Esto sugiere que, con un 95% de confianza, el tiempo promedio poblacional que los usuarios pasan en la plataforma es mayor a 45 minutos. Además, la prueba de hipótesis rechazó la hipótesis nula

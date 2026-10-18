@@ -1,0 +1,120 @@
+---
+title: "Guia EDA"
+output: html_document
+date: "2025-08-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Cargar librerías necesarias
+library(dplyr)
+library(ggplot2)
+library(Amelia)
+```
+
+## Análisis de la naturaleza de las variables y presentación del problema 
+
+**Numéricas:** Discretas o Continuas  
+**Categóricas:** Ordinales o Nominales 
+
+## Carga del dataset y presentación del mismo 
+
+```{r carga_datos}
+url <- "https://raw.githubusercontent.com/cdeoroaguado/Datos/main/datamanip/sales.csv"
+datos <- read.csv(url)
+head(datos, n=5) # breve visualización del dataset 
+dim(datos) # muestra el número de filas y columnas
+colnames(datos) # nombre de las variables
+str(datos) # me ayuda a ver la naturaleza de los datos 
+```
+
+## Identificación de los NA
+
+Esta función me sirve para poder ver los NA:
+
+```{r identificar_na}
+library(Amelia)
+missmap(datos)
+# Esta línea de código me sirve para ignorar los NA
+datos_sin_na <- na.omit(datos)
+```
+
+## Breve resumen de nuestra variable target 
+
+```{r resumen_target}
+# Para variable numérica (weekly_sales)
+datos_sin_na %>% 
+  summarise(
+    n = length(weekly_sales),
+    media = mean(weekly_sales),
+    ds = sd(weekly_sales),
+    mediana = median(weekly_sales),
+    minimo = min(weekly_sales),
+    maximo = max(weekly_sales),
+    Q1 = quantile(weekly_sales, 0.25),
+    Q3 = quantile(weekly_sales, 0.75),
+    IQR = IQR(weekly_sales)
+  )
+
+# Para variable categórica (descomenta si necesitas usar):
+# datos_sin_na %>% 
+#   summarise(
+#     n_total = length(nombre_variable_categorica),
+#     n_categorias = n_distinct(nombre_variable_categorica),
+#     n_na = sum(is.na(nombre_variable_categorica)),
+#     categoria_mas_frecuente = names(sort(table(nombre_variable_categorica), decreasing = TRUE))[1],
+#     frecuencia_maxima = max(table(nombre_variable_categorica))
+#   )
+```
+
+**Interpretación de los datos con respecto a la variable target:**
+[Aquí debes escribir tu interpretación basada en los resultados del resumen estadístico]
+
+## Gráfico de la variable target 
+
+```{r grafico_target}
+datos_sin_na %>%
+  ggplot(aes(x = weekly_sales)) +
+  geom_histogram(aes(y = after_stat(density)), 
+                 binwidth = 5000, 
+                 fill = "#2c7fb8", 
+                 color = "white", 
+                 alpha = 0.6) +
+  geom_density(color = "darkblue", linewidth = 1.2) +
+  labs(
+    title = "Distribución de Ventas Semanales",
+    x = "Ventas Semanales (USD)",
+    y = "Densidad"
+  ) +
+  theme_bw()
+
+
+#Si la variable es categorica 
+# datos_sin_na %>%
+#   ggplot(aes(x = variable_categorica)) +
+#   geom_bar(fill = "#2c7fb8", 
+#            color = "white", 
+#            alpha = 0.6) +
+#   geom_text(stat = 'count', 
+#             aes(label = after_stat(count)), 
+#             vjust = -0.5) +
+#   labs(
+#     title = "Distribución de Variable Categórica",
+#     x = "Categorías",
+#     y = "Frecuencia"
+#   ) +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Analisis univariado de varibles relevante
+
+Revisar en la guia de eda los diversos graficos 
+
+## Analisis bivariado de varibles relevante
+
+Revisar en la guia de eda los diversos graficos 
+
+
+
+

@@ -1,0 +1,97 @@
+---
+title: "Tarea#2"
+output: html_document
+date: "2025-09-16"
+---
+
+
+## Cargar la data 
+
+
+
+```{r }
+df <- matrix(c(15.7, 4,
+                  17.2, 3,
+                  13.8, 6,
+                  24.2, 5,
+                  15.0, 3,
+                  12.7, 12,
+                  13.8, 5,
+                  18.7, 1,
+                  10.8, 12,
+                  11.8, 11,
+                  25.4, 2,
+                  17.2, 4),
+                nrow = 12, byrow = TRUE,
+                dimnames = list(
+                  NULL,
+                  c("numpro", "ayu")
+                ))
+
+n <- nrow(df)
+
+```
+
+## Punto 1
+
+Determine el coeficiente de correlación r de Pearson.
+
+```{r }
+x <- df[, "numpro"]
+y <- df[, "ayu"]
+xbar<- mean(x)
+ybar<- mean(y)
+
+a <- x-xbar
+b <- y-ybar 
+
+Sxy <- sum(a*b)
+Sxx <- sum(a^2)
+Syy <- sum(b^2)
+
+r <- Sxy/sqrt(Sxx*Syy)
+
+print(r)
+  
+```
+
+
+## Punto 2 
+
+Haga una prueba, con α= 0.05, para determinar si el número de proyectos está relacionado con las ayudas recibidas.
+Como nuestro n es menor a 25 utilizaremos la prueba t para determinar esto 
+
+```{r}
+t0 <- abs(r*sqrt(n-2))/(sqrt(1-r^2))
+gl<- n-2
+alpha = 0.05
+t_tab<- qt(1-alpha/2, df = gl)
+if(t0>t_tab){
+  print("Se rechaza H0")
+}else{
+  print("No se rechaza H0")
+}
+```
+
+Se puede condluir con una significancia estadistica del 0.05 que hay una relacion entre las ayudas y el numero de proyectos
+
+## Punto 3 
+
+Pruebe la hipótesis nula H0:ρ≤0 contra la hipótesis alternativa H1:ρ>0, usando  α=0.05
+
+```{r}
+t0 <- abs(r*sqrt(n-2))/(sqrt(1-r^2))
+gl<- n-2
+alpha = 0.05
+t_tab<- qt(1-alpha, df = gl)
+if(t0>t_tab){
+  print("Se rechaza H0")
+}else{
+  print("No se rechaza H0")
+}
+```
+Se puede concluir con una significancia estadistica del 0.05 que hay una relacion positiva entre las ayudas y el numero de proyectos
+
+
+
+

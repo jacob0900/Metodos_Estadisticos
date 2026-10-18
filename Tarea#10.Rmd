@@ -1,0 +1,95 @@
+---
+title: "Tarea#4"
+output: html_document
+date: "2025-09-16"
+---
+
+## cargar data
+
+
+```{r }
+df <- matrix(c(65, 90,
+                  55, 85,
+                  70, 87,
+                  65, 94,
+                  70, 98,
+                  55, 81,
+                  70, 91,
+                  50, 76,
+                  55, 74,
+                  65, 85,
+                  50, 74,
+                  55, 76),
+                nrow = 12, byrow = TRUE,
+                dimnames = list(
+                  NULL,
+                  c("año_pa", "año")
+                ))
+```
+
+## Punto 1
+
+Calcule e interprete el coeficiente de correlación muestral
+
+```{r }
+n<- nrow(df)
+x<- df[, "año_pa"]
+y<- df[, "año"]
+xbar<- mean(x)
+ybar<- mean(y)
+
+a<- x-xbar
+b<- y-ybar 
+
+Sxy <- sum(a*b)
+Sxx<- sum(a^2)
+Syy<- sum(b^2)
+r<- Sxy/sqrt(Sxx*Syy)
+
+print(r)
+```
+
+
+## Punto 2 
+Establezca las suposiciones necesarias sobre las variables aleatorias para la validez del análisis
+
+# Normalidad 
+Como el n es menor a 30 entonces aplicaremos Shapiro para mayor rigor 
+```{r}
+shapiro_x <- shapiro.test(df[, "año_pa"])
+shapiro_y <- shapiro.test(df[, "año"])
+
+print(shapiro_x)
+print(shapiro_y)
+```
+la variable año_pasado no es normal por lo que, tendremos que verificar si podemos utilizar Spearman 
+
+# Relacion monotona  y naturelaza de los datos
+Los datos al ser proemdio de notas son numericas de razon haremos un grafico de dispersion para ver si hay una relacion creciente o decreciente en los datos 
+
+```{r}
+library(tidyverse)
+df %>% 
+  ggplot(aes(x=año_pa,y=año))+
+  geom_point(color='blue', size = 3)+
+  geom_smooth(formula= y ~ x, method = 'lm', color ='red')+
+  theme_bw()
+```
+
+Como podemos observar en este caso entre que una variable aumenta la otra tambien lo hace por lo que cumple el supuesto de relacion monotona
+
+# Independencia
+Las observaciones deben ser independientes entre sí?
+
+Es claro en el grafico de dispersion que cada estudiante tiene sus propias notas y no hay observaciones que dependan de otras 
+
+# Manejo de empates 
+Calcularemos el coeficiente muestral spearman el cual hace un manejo automatico de los empates 
+```{r}
+cor.test(x, y, method = "spearman")
+```
+
+# Conclusion
+Teneinedo todo esto en cuenta los datos cumplen los supuestos para aplicar la Prueba Spearman 
+
+

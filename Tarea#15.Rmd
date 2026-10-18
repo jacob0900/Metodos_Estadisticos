@@ -1,0 +1,100 @@
+---
+title: "Tarea#15"
+output: html_document
+date: "2025-09-24"
+---
+
+
+## Cargar la data
+
+
+
+```{r}
+library(tidyverse)
+df <- matrix(c(1.25, 1.93,
+               1.325, 4.63,
+               1.375, 8.95,
+               1.45, 15.05,
+               1.55, 23.31),
+             nrow = 5, byrow = TRUE,
+             dimnames = list(
+               NULL,
+               c("Densidad", "Porcentaje_ceniza")
+             ))
+```
+
+## Punto 1
+
+Construya un diagrama de dispersión del porcentaje de ceniza (y) contra la densidad (x). Verifique que es adecuado un modelo lineal.
+
+
+
+```{r }
+df %>% 
+  ggplot(mapping = aes( x = Densidad, y = Porcentaje_ceniza))+
+  geom_point()+
+  geom_smooth(formula = 'y~x', method = 'lm')+
+  theme_bw()
+```
+
+Se puede aprrciar una clara relacion lineal entre las variables 
+
+## Punto 2
+
+Calcule la recta de mínimos cuadrados para pronosticar porcentaje de ceniza a partir de la densidad.
+
+```{r}
+X <- df[, "Densidad"]
+Y <- df[, "Porcentaje_ceniza"]
+n <- length(X)
+
+# 3. Medias
+x_bar <- mean(X)
+y_bar <- mean(Y)
+
+# 4. Cálculo de Sxx y Sxy
+Sxx <- sum((X - x_bar)^2)
+Sxy <- sum((X - x_bar) * (Y - y_bar))
+
+# 5. Estimadores de mínimos cuadrados
+beta1 <- Sxy / Sxx
+
+# 6. Estimador beta0
+beta0 <- y_bar - beta1 * x_bar
+
+# 7. Valores ajustados
+Y_hat <- beta0 + beta1 * X
+```
+
+## Punto 3
+
+Si las dos partículas de carbón difieren en densidad por 0.1 g/cm³, ¿cuánto predeciría que será diferente el porcentaje de ceniza?
+
+
+```{r}
+
+X_5<-5
+Y_hat_5 <- beta0 + beta1 * X_5
+
+X_51<-5.1
+Y_hat_51 <- beta0 + beta1 * X_51
+
+dif<-Y_hat_5 -Y_hat_51
+
+print(dif)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

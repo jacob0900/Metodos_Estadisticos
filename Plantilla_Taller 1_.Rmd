@@ -1,0 +1,455 @@
+---
+title: 'Taller1_Grupo1 Por:Por :Jacobo Londoño; Jesus Barrios y Paulo Poveda'
+output: html_document
+date: "2025-02-XX"
+---
+
+# Eficiencia de los chatbots en la industria
+
+## 1. Revisión de datos:
+
+**1.1 ¿Cuál es la población objetivo?** La población objetivo de este estudio está conformada principalmente por profesionales que se encuentran activos en el ámbito laboral y que utilizan chatbots como parte de sus actividades en el contexto empresarial. Este grupo incluye individuos de diversos sectores económicos y niveles educativos, lo que permite obtener una visión amplia y representativa de cómo los chatbots son empleados en diferentes entornos laborales. La elección de esta población se justifica por la creciente relevancia de los chatbots en la optimización de procesos empresariales y la mejora de la interacción con los clientes, lo que los convierte en un tema de interés tanto para las organizaciones como para los profesionales que los implementan.
+
+**1.2 ¿Existe una muestra? ¿Cuál es?** Sí, en este estudio se ha seleccionado una muestra compuesta por 300 empleados que representan una diversidad de niveles educativos y sectores empresariales. Esta muestra fue diseñada para reflejar la heterogeneidad de la población objetivo, asegurando que se incluyan perspectivas de diferentes contextos laborales y niveles de formación académica. La selección de una muestra de este tamaño y características permite realizar inferencias estadísticas con un margen de confianza adecuado, al tiempo que garantiza que los resultados sean generalizables a la población de interés. La muestra fue obtenida mediante un proceso de selección que busca equilibrar la representatividad y la viabilidad en la recolección de datos.
+
+**1.3 Mencione un parámetro y un estadístico en este estudio.** En el contexto estadístico, un parámetro se refiere a una característica numérica que describe a una población. En este estudio, un ejemplo de parámetro sería la edad promedio de todos los profesionales activos laboralmente que utilizan chatbots en el contexto empresarial. Este valor representa una medida de tendencia central que describe una característica específica de la población objetivo, aunque no es directamente observable debido a que no se tienen datos completos de toda la población.
+
+Por otro lado, un estadístico es una medida que describe una característica de una muestra. En este caso, un ejemplo de estadístico sería la edad promedio de los 300 empleados que conforman la muestra. Este valor se calcula a partir de los datos recolectados y se utiliza como una estimación del parámetro poblacional. La comparación entre el parámetro y el estadístico permite evaluar la precisión de las inferencias realizadas a partir de la muestra, así como la representatividad de esta última en relación con la población de interés.
+
+**1.4 Clasifique cada una de las variables de la base de datos acuerdo con su naturaleza y nivel de medición**
+
+```{r}
+
+tabla <- data.frame(
+  VARIABLES = c("Genero", "Nivel educatico", "Sector empreserial",
+"Uso chatbots","Satisfaccion de chatbots","edad","Horas pantalla","Uso chatbots seg"),
+  NATURALEZA_DE_LOS_DATOS  = c("categorica", "categorica", "categorica","categorica", "categorica", "numerica","numerica","numerica"),
+  NIVEL_DE_MEDICION  = c("nominal", "ordinal", "nominal","ordinal","ordinal","continua","continua","continua")
+)
+
+
+print(tabla)
+```
+
+------------------------------------------------------------------------
+
+## Instalar y cargar paquetes necesarios
+
+```{r}
+library(tidyverse)
+library(dplyr)# Manipulación de Datos
+library(ggplot2)# Visualización de datos 
+library(readxl)# Importación de datos
+library(tibble)# Tablas
+
+options(repos = c(CRAN = "https://cloud.r-project.org/")); install.packages("agricolae")
+
+```
+
+------------------------------------------------------------------------
+
+## 2. Preparación de la base de datos:
+
+Cargar base de datos:
+
+```{r}
+
+library(readxl)
+
+# Abrir un cuadro de diálogo para seleccionar el archivo
+ruta_archivo <- file.choose()
+
+# Cargar el archivo seleccionado
+datos <- read_excel(ruta_archivo)
+
+# Verificar los datos
+head(datos)
+
+
+```
+
+**2.1 Nombres de variables**
+
+```{r}
+names(datos)
+```
+
+**2.2 Dimesiones de la base de datos**
+
+```{r}
+dim(datos)
+```
+
+**2.3 Mostrar las primeras filas de la base de datos**
+
+```{r}
+head(datos)
+```
+
+**2.4 Tipos de datos**
+
+```{r}
+str(datos)
+```
+
+### 2.5 Revisión de valores faltantes
+
+```{r}
+colSums(is.na(datos))
+```
+
+Se puede observar una evidente carencia de datos en las variables horas_pantalla y uso_chatbots_seg, lo cual podría impactar significativamente la validez y fiabilidad de los resultados obtenidos en nuestro estudio. La ausencia de valores en dichas variables puede afectar los cálculos estadísticos y la interpretación de los patrones y tendencias presentes en los datos. Por ello, en etapas posteriores del análisis, se llevará a cabo un proceso exhaustivo de edición y depuración de la base de datos, con el objetivo de garantizar la integridad y calidad de la información. Este procedimiento permitirá aplicar las técnicas estadísticas pertinentes de manera adecuada, asegurando que las conclusiones derivadas del estudio sean precisas y representativas.
+
+### 2.6 Revisión de datos atípicos
+
+```{r}
+summary(datos)
+```
+
+Podemos notar la existencia de ciertos valores totalmente absurdos como tiempos con valores negativos y personas 14 años trabajando a continucion realizaremos una limpieza de los datos pasando por cada variable
+
+**2.6.1 Depuracion de la variable edad**
+
+Considerando que los trabajadores se clasifican según la variable nivel_educativo, la depuración de los datos se realizará con base en los rangos de edad típicos de cada categoría. Se excluirán los valores inferiores a 22 años, dado que esta es la edad promedio en la que los estudiantes finalizan la universidad. Para quienes poseen un postgrado, se considerará un mínimo de 24 años, ya que la duración media de esta especialización es de dos años y requiere haber finalizado la licenciatura. Por su parte, quienes cuentan con un doctorado deberán tener al menos 28 años, debido a que este programa suele extenderse durante cuatro años y exige haber cursado tanto la universidad como una maestría. Finalmente, los valores atípicos dentro de cada categoría serán reemplazados por la mediana correspondiente para evitar introducir sesgos en la muestra.
+
+```{r}
+
+
+# Cargar la librería dplyr para manipulación de datos
+library(dplyr)
+
+# Abrir un cuadro de diálogo para seleccionar el archivo
+ruta_archivo <- file.choose()
+
+# Cargar el archivo seleccionado
+dataset_chatbots <- read_excel(ruta_archivo)
+
+# Cargar las librerías necesarias
+
+library(ggplot2)
+
+# Verificar que el DataFrame esté cargado
+if (!exists("dataset_chatbots")) {
+  stop("El DataFrame 'dataset_chatbots' no está cargado.")
+}
+
+# Definir los límites de edad
+limite_pregrado <- 22
+limite_postgrado <- 24
+limite_doctorado <- 28
+
+# Calcular la mediana de la edad para cada grupo
+mediana_pregrado <- dataset_chatbots %>%
+  filter(nivel_educativo == "pregrado") %>%
+  summarise(mediana = median(edad, na.rm = TRUE)) %>%
+  pull(mediana)
+
+mediana_posgrado <- dataset_chatbots %>%
+  filter(nivel_educativo == "posgrado") %>%
+  summarise(mediana = median(edad, na.rm = TRUE)) %>%
+  pull(mediana)
+
+mediana_doctorado <- dataset_chatbots %>%
+  filter(nivel_educativo == "doctorado") %>%
+  summarise(mediana = median(edad, na.rm = TRUE)) %>%
+  pull(mediana)
+
+# Función para reemplazar valores atípicos
+reemplazar_atipicos <- function(nivel_educativo, edad) {
+  if (nivel_educativo == "pregrado" && edad < limite_pregrado) {
+    return(mediana_pregrado)
+  } else if (nivel_educativo == "posgrado" && edad < limite_postgrado) {
+    return(mediana_posgrado)
+  } else if (nivel_educativo == "doctorado" && edad < limite_doctorado) {
+    return(mediana_doctorado)
+  } else {
+    return(edad)
+  }
+}
+
+# Aplicar la función para reemplazar atípicos
+dataset_chatbots <- dataset_chatbots %>%
+  mutate(edad = mapply(reemplazar_atipicos, nivel_educativo, edad))
+
+# Verificar las edades modificadas
+print(dataset_chatbots)
+
+
+
+
+```
+
+Ahora mostraremos un diagrama de caja y bigotes para reeconfirmar que la depuracion a sido efectiva
+
+```{r}
+
+
+
+ggplot(dataset_chatbots, aes(x = nivel_educativo, y = edad)) +
+  geom_boxplot() +
+  labs(title = "Diagrama de caja y bigotes de edades por nivel educativo",
+       x = "Nivel educativo",
+       y = "Edad") +
+  theme_minimal()
+
+
+
+
+
+```
+
+**2.6.2 Depuracion de la variable horas_pantalla** Llevaremos a cabo un proceso exhaustivo de depuración de esta variable con el objetivo de garantizar la calidad y representatividad de los datos. Para ello, en primer lugar, calcularemos la mediana de la variable, dado que este estadístico es robusto frente a valores extremos y proporciona una medida confiable de tendencia central. Posteriormente, reemplazaremos aquellos valores considerados atípicos por dicha mediana, lo cual nos permitirá mantener la coherencia de la muestra sin distorsionar los resultados del análisis. Asimismo, se procederá a omitir los valores faltantes (NA), evitando así posibles sesgos que podrían afectar la interpretación de los resultados. Este procedimiento contribuirá a obtener un conjunto de datos más homogéneo y consistente, facilitando la aplicación de técnicas estadísticas y garantizando la validez de las conclusiones obtenidas.
+
+```{r}
+# Desactivar notación científica
+options(scipen = 999)
+
+# Abrir un cuadro de diálogo para seleccionar el archivo
+ruta_archivo <- file.choose()
+
+# Cargar el archivo seleccionado
+library(readxl)
+datos <- read_excel(ruta_archivo)
+
+# Verificar nombres de columnas
+cat("Nombres de columnas en el archivo:\n")
+print(names(datos))
+
+# Convertir a numérico (si es necesario)
+datos$horas_pantalla <- as.numeric(datos$horas_pantalla)
+
+# Comprobar si hay valores numéricos
+if (all(is.na(datos$horas_pantalla))) {
+  cat("No hay valores numéricos finitos en la columna 'horas_pantalla'.")
+} else {
+  # Boxplot antes de reemplazar valores atípicos
+  boxplot(datos$horas_pantalla, horizontal = TRUE, col = 'cadetblue4', main = "Boxplot de Horas de Pantalla")
+
+  # Calcular la mediana
+  mediana <- median(datos$horas_pantalla, na.rm = TRUE)
+
+  # Reemplazar valores atípicos
+  datos$horas_pantalla <- ifelse(datos$horas_pantalla %in% boxplot.stats(datos$horas_pantalla)$out, 
+                                 mediana, 
+                                 datos$horas_pantalla)
+
+  # Boxplot después de reemplazar los valores atípicos
+  boxplot(datos$horas_pantalla, horizontal = TRUE, col = 'cadetblue4', 
+          main = "Boxplot de Horas de Pantalla (Atípicos Reemplazados con Mediana)")
+
+  # Comprobar los valores finales
+  cat("Valores únicos tras la limpieza:\n")
+  print(unique(datos$horas_pantalla))
+}
+```
+
+**2.6.3 Depuracion de la variable uso_chatbots_seg** Llevaremos a cabo un proceso exhaustivo de depuración de esta variable con el objetivo de garantizar la calidad y representatividad de los datos. Para ello, en primer lugar, calcularemos la mediana de la variable, dado que este estadístico es robusto frente a valores extremos y proporciona una medida confiable de tendencia central. Posteriormente, reemplazaremos aquellos valores considerados atípicos por dicha mediana, lo cual nos permitirá mantener la coherencia de la muestra sin distorsionar los resultados del análisis. Asimismo, se procederá a omitir los valores faltantes (NA), evitando así posibles sesgos que podrían afectar la interpretación de los resultados. Este procedimiento contribuirá a obtener un conjunto de datos más homogéneo y consistente, facilitando la aplicación de técnicas estadísticas y garantizando la validez de las conclusiones obtenidas.
+
+```{r}
+# Código para limpiar y graficar la variable `uso_chatbots_seg`
+
+# Desactivar notación científica
+options(scipen = 999)
+
+# Cargar el archivo
+ruta_archivo <- file.choose()
+datos <- readxl::read_excel(ruta_archivo)
+
+# Verificar si la columna existe
+if (!"uso_chatbots_seg" %in% names(datos)) {
+  stop("Error: La columna 'uso_chatbots_seg' no existe en el archivo. Verifica el nombre.")
+}
+
+# Convertir la columna a numérica (por si viene como texto)
+datos$uso_chatbots_seg <- as.numeric(datos$uso_chatbots_seg)
+
+# Filtrar valores válidos (no NA y no negativos)
+datos_validos <- datos[!is.na(datos$uso_chatbots_seg) & datos$uso_chatbots_seg >= 0, ]
+
+# Verificar si hay valores válidos
+if (nrow(datos_validos) == 0) {
+  cat("No hay valores válidos en la columna 'uso_chatbots_seg'.")
+} else {
+  # Boxplot inicial
+  boxplot(datos_validos$uso_chatbots_seg, 
+          horizontal = TRUE, 
+          col = 'purple',  # Cambiado a morado
+          main = "Boxplot de uso de chatbots en segundos")
+
+  # Calcular la mediana
+  mediana <- median(datos_validos$uso_chatbots_seg, na.rm = TRUE)
+
+  # Identificar valores atípicos
+  atipicos <- boxplot.stats(datos_validos$uso_chatbots_seg)$out
+
+  # Reemplazar valores atípicos con la mediana
+  datos_validos$uso_chatbots_seg <- ifelse(datos_validos$uso_chatbots_seg %in% atipicos, mediana, datos_validos$uso_chatbots_seg)
+
+  # Boxplot final
+  boxplot(datos_validos$uso_chatbots_seg, 
+          horizontal = TRUE, 
+          col = 'purple',  # Cambiado a morado
+          main = "Boxplot de uso de chatbots en segundos (Atípicos reemplazados con mediana)")
+
+  # Mostrar valores únicos
+  cat("Valores únicos tras la limpieza:\n")
+  print(unique(datos_validos$uso_chatbots_seg))
+}
+
+```
+
+## 3. Organización de datos en tablas de frecuencias:
+
+Tabla para la variable: Sector empresarial
+
+```{r}
+
+#tabla 1
+tablas <- data.frame(datos_validos)
+table(tablas$sector_empresa)
+
+
+
+```
+Conclusiones:Tecnología es el sector con mayor número de profesionales (121), seguido por finanzas (56), salud (40) y retail (35). Esto indica que el uso de chatbots es más prevalente en el sector tecnológico, posiblemente debido a la naturaleza innovadora y digital de esta industria. Los sectores de finanzas y salud también muestran una adopción significativa, aunque menor en comparación.
+
+
+
+----------------------------------------
+Tabla para la variable: Nivel educativo
+
+```{r}
+
+#tabla 2
+table(tablas$nivel_educativo)
+
+
+
+```
+Conclusion:El nivel educativo más común entre los profesionales encuestados es el pregrado (129), seguido por posgrado (92) y doctorado (58). Esto refleja que la mayoría de los empleados tienen una formación de pregrado, lo que podría influir en la adopción y uso de chatbots en el entorno laboral.
+
+------------------------------
+Tabla para la variable: edad
+
+```{r}
+
+#tabla agrupada
+install.packages("agricolae")
+library(agricolae)
+t<- hist(tablas$edad,plot=FALSE)
+tfedad <-table.freq(t)
+tfedad
+
+```
+Conclusion:
+La mayor concentración de empleados se encuentra en el rango de edad de 35 a 40 años (25.1%), seguido por el rango de 30 a 35 años (22.5%). Esto indica que la mayoría de los usuarios de chatbots en el entorno laboral son adultos en la etapa media de sus carreras.
+
+La frecuencia disminuye significativamente en los rangos de edad más altos (45-50 y 50-55 años), lo que sugiere que los empleados más jóvenes y de mediana edad son los principales usuarios de estas herramientas.
+
+
+
+----------------------------------
+Tabla para las variables: Nivel educativo y Uso de chatbots
+
+```{r}
+
+#tabla de contingencia
+
+tabla_contingencia <- table(tablas$nivel_educativo,tablas$uso_chatbots)
+tabla_contingencia
+
+```
+Conclusiones:
+Los profesionales con doctorado tienden a usar chatbots con menos frecuencia (14 frecuente, 16 moderado, 28 nano), mientras que los de pregrado muestran un uso más equilibrado (39 frecuente, 58 moderado, 48 nano). Esto podría indicar que los profesionales con mayor nivel educativo (doctorado) utilizan chatbots de manera más selectiva o en contextos específicos.
+
+Los profesionales con posgrado y pregrado muestran un uso más frecuente y moderado de chatbots, lo que sugiere que estos grupos están más familiarizados o dependen más de estas herramientas en su trabajo diario.
+
+
+
+-----------------------------------------------------------------
+
+## 4. Organización de datos en gráficos
+
+Gráfico de tipo circular para la variable:genero
+
+```{r}
+
+# Gráfico 1
+ggplot(datos, aes(x = "", fill = genero)) +
+  geom_bar(width = 1) +
+  coord_polar("y") +
+  labs(title = "Distribución de género") +
+  theme_minimal()
+
+```
+
+**¿Qué ve?** 
+
+- La proporción de cada género en la muestra (por ejemplo, masculino, femenino, otro).
+
+- Cada segmento del círculo representa la frecuencia relativa de cada categoría de género.
+
+- Si hay una categoría dominante (por ejemplo, más hombres que mujeres), se verá reflejada en el tamaño del segmento correspondiente.
+
+- Es útil para visualizar la composición de la muestra en términos de género.
+
+Gráfico de tipo histograma para la variable: Edad
+
+```{r}
+
+# Gráfico 2
+
+ggplot(datos, aes(x = edad)) +
+  geom_histogram(binwidth = 5, fill = "skyblue", color = "black") +
+  labs(title = "Distribución de la Edad",
+       x = "Edad",
+       y = "Frecuencia") +
+  theme_minimal()
+
+```
+
+**¿Qué ve?**
+En este histograma se observa la distribución de la edad de los empleados en la muestra. Podemos identificar:
+
+La mayoría de los empleados se concentran en un rango de edad específico (por ejemplo, entre 25 y 45 años).
+
+La distribución parece ser unimodal, con un pico alrededor de la mediana de edad.
+
+No hay valores atípicos extremos, ya que se realizó una depuración previa de los datos.
+
+Gráfico de tipo diagrama de cajas y bigotes para la variable: uso de chatbots en segundos
+
+```{r}
+
+# Gráfico 3
+
+boxplot(datos_validos$uso_chatbots_seg, horizontal = TRUE, col = 'purple', main = "Boxplot de uso de chatbots en segundos")
+
+
+
+```
+
+**¿Qué ve?**
+
+En este diagrama de cajas y bigotes se observa:
+
+La distribución del tiempo de uso de chatbots en segundos.
+
+La caja central representa el rango intercuartílico (IQR), que contiene el 50% de los datos.
+
+La línea dentro de la caja indica la mediana del tiempo de uso.
+
+Los "bigotes" muestran el rango de los datos, excluyendo los valores atípicos.
+
+Los puntos fuera de los bigotes representan valores atípicos, que fueron reemplazados por la mediana durante la depuración de datos.
+------------------------------------------------------------------------
+
+## 5. Hallazgos y conclusiones
+
+- **Hallazgo 1:** Este sugiere que el sector tecnológico es el principal adoptante de chatbots en el ámbito empresarial. Esto puede deberse a que las empresas de tecnología están más familiarizadas con las herramientas digitales y tienen una mayor capacidad para implementar soluciones innovadoras como los chatbots. Además, la naturaleza de sus operaciones (como el soporte técnico, la atención al cliente y la automatización de procesos) se beneficia significativamente de la integración de chatbots. Por otro lado, otros sectores, como el retail o la salud, podrían estar en etapas más tempranas de adopción, lo que explica su menor representación en la muestra. Este hallazgo resalta la importancia de fomentar la adopción de chatbots en sectores menos tecnológicos para maximizar su impacto en la productividad y la experiencia del cliente.
+
+- **Hallazgo 2:** Este indica que los empleados más jóvenes tienden a pasar más tiempo frente a pantallas en comparación con los empleados de mayor edad. Esto podría estar relacionado con la mayor familiaridad de las generaciones más jóvenes con las tecnologías digitales, así como con su mayor disposición a utilizar herramientas en línea para realizar sus tareas. Por el contrario, los empleados de mayor edad podrían preferir métodos tradicionales o tener menos exposición a entornos digitales. Este hallazgo sugiere la necesidad de diseñar estrategias de capacitación y adaptación tecnológica para los empleados de mayor edad, con el fin de cerrar la brecha digital y garantizar que todos los trabajadores puedan aprovechar al máximo las herramientas disponibles.
+
+- **Hallazgo 3:** Este revela que los empleados con niveles educativos más altos (como posgrados o doctorados) tienden a mostrar una mayor satisfacción con el uso de chatbots en comparación con aquellos con niveles educativos más bajos. Esto podría deberse a que los profesionales con mayor formación tienen una mejor comprensión de las capacidades y limitaciones de los chatbots, lo que les permite utilizarlos de manera más efectiva. Además, es posible que los empleados con mayor educación estén más abiertos a adoptar nuevas tecnologías y a integrarlas en sus flujos de trabajo. Por otro lado, los empleados con niveles educativos más bajos podrían sentirse menos cómodos con estas herramientas o no ver su valor agregado. Este hallazgo subraya la importancia de diseñar programas de capacitación y sensibilización para todos los niveles educativos, con el fin de maximizar la satisfacción y el uso efectivo de los chatbots en el entorno laboral.
+
+(...)

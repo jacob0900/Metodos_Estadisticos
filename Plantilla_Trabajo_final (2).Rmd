@@ -1,0 +1,195 @@
+---
+title: "Escribir título aquí"
+author: "Type your name here"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: true
+    code_folding: hide
+---
+
+
+
+
+# Título principal del trabajo  
+
+# PLanteamiento del problema:
+
+## Objetivo general
+Escribe aquí ...
+
+## Objetivos específicos
+
+- Escribe aquí...  
+- Escribe aquí...  
+
+## Justificación
+
+
+# Análisis Exploratorio (EDA)
+
+## 1. Revisión de datos:
+
+
+***Clasifique cada una de las variables de la base de datos acuerdo con su naturaleza y nivel de medición***
+
+Variable 1: ....  
+Variable 2: ....  
+...
+
+
+
+---
+
+
+
+***Instalar y cargar paquetes necesarios***
+
+Recuerde que la instación se realiza una sóla vez con la función instal..packages("nombre del paquete"), luego se deben llamar con la función library(nombre del paquete).
+
+
+```{r}
+#Codigo aquí
+
+
+
+```
+
+
+
+
+---
+
+## 2. Preparación de la base de datos:
+
+Cargar base de datos:
+```{r}
+#Codigo aqui
+
+
+```
+
+**Nombres de variables**
+```{r}
+
+```
+
+**Dimesiones de la base de datos**
+```{r}
+
+```
+
+**Mostrar las primeras filas de la base de datos**
+```{r}
+
+```
+
+**Tipos de datos**
+```{r}
+
+```
+
+
+### Revisión de valores faltantes
+```{r}
+
+```
+¿qué encontró?
+
+
+### Revisión de datos atípicos
+```{r}
+
+```
+¿qué encontró?
+
+
+
+---
+
+
+
+## 3. Organización de datos en tablas de frecuencias:
+
+Tabla para la variable: ...
+
+```{r}
+
+#tabla 1
+
+
+
+```
+
+Tabla para la variable: ...
+
+```{r}
+
+#tabla de contingencia
+
+
+
+```
+
+
+
+---
+
+
+
+## 4. Organización de datos en gráficos
+
+Gráfico de tipo ... para la variable: ...
+
+```{r}
+
+# Gráfico 1
+
+
+
+```
+¿Qué ve?
+
+Gráfico de tipo ... para la variable: ...
+```{r}
+
+# Gráfico 2
+
+
+
+```
+¿Qué ve?
+
+
+---
+
+
+# Planteamiento de hipótesis
+
+***Hipótesis 1***
+
+Ho: escriba aquí
+H1: Escriba aquí
+
+```{r}
+#Cógigo aquí
+
+
+
+```
+
+¿acepta o rechaza Ho?
+
+
+# Resultados y conclusiones
+
+- Hallazgo 1
+- Hallazgo 2
+- Hallazgo 3
+
+(...)
+
+

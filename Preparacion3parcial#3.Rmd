@@ -1,0 +1,81 @@
+---
+title: "Preparacion3parcial#3"
+output: html_document
+date: "2025-10-29"
+---
+
+
+
+## R Markdown
+
+
+
+```{r }
+library(tidyverse)
+library(ggplot2)
+### df$nombre_columna <- NULL eliminar una variable 
+df <- data.frame(
+  VMP = c(1.4, 15.7, 2.54, 1.14, 0.889, 1.65, 1.4, 1.02, 4.57, 6.6, 1.02, 3.94, 1.4, 1.4),
+  distancia_escalada = c(47.33, 9.6, 15.8, 24.3, 23.0, 16.3, 39.8, 29.94, 10.9, 8.63, 28.64, 18.21, 33.0, 34.0)
+)
+```
+
+## Punto 1
+
+Grafique la VMP contra la distancia escalada. ¿La relación parece ser lineal?
+
+```{r }
+# Solo análisis visual - SIN recta de regresión
+ggplot(df, aes(x = distancia_escalada, y = VMP)) +
+  geom_point(size = 3, alpha = 0.7) +
+  labs(title = "Relación entre VMP y Distancia Escalada",
+       subtitle = "Análisis visual de linealidad",
+       x = "Distancia Escalada",
+       y = "VMP") +
+  theme_bw()
+```
+
+No se puede ver una relacion lineal entre las variables 
+
+
+## Punto 2
+
+Calcule la recta de mínimos cuadrados para el modelo ln(VMP)=β0+β1ln(distancia escalada)+ϵ. Grafique los residuos contra los valores ajustados. ¿Este modelo lineal parece adecuado?
+
+```{r}
+modelo1 <- lm(  log( VMP) ~ log(distancia_escalada), data = df)
+print(modelo1)
+
+print("ln(y)=4.662-ln(x)*1.280+ϵ")
+
+df %>% 
+ggplot(aes( log(distancia_escalada), log( VMP))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relacion original: disstancia vs VMP con transformacion logaritmica ")+
+  theme_bw()
+```
+
+
+## Punto 3
+
+Utilice la recta de mínimos cuadrados calculada en el inciso (b) para predecir la VMP cuando la distancia escalada es 20. Determine un intervalo de predicción de 95%
+
+
+
+
+```{r}
+
+
+predict(modelo1, newdata = data.frame(distancia_escalada  = 20), interval = "prediction")
+
+
+
+```
+
+
+
+
+
+
+

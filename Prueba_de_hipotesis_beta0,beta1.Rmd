@@ -1,0 +1,87 @@
+---
+title: "Prueba_de_hipotesis_beta0,beta1"
+output: html_document
+date: "2025-10-29"
+---
+
+
+
+
+```{r }
+
+# PRUEBAS DE HIPÓTESIS PARA β₀ Y β₁
+# ===================================
+
+# Datos de ejemplo
+x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+Y <- c(2.1, 3.9, 6.2, 7.8, 10.1, 11.9, 14.2, 15.8, 18.1, 20.3)
+
+alpha <- 0.05
+
+# Ajustar modelo
+modelo <- lm(Y ~ x)
+n <- length(x)
+gl <- n - 2
+
+# Cálculos comunes
+S_xx <- sum((x - mean(x))^2)
+SCE <- sum(residuals(modelo)^2)
+sigma_hat_2 <- SCE / gl
+
+# =====================================
+# PRUEBA PARA β₁ (PENDIENTE)
+# =====================================
+cat("\n===== PRUEBA PARA β₁ =====\n")
+cat("H₀: β₁ = 0  vs  H₁: β₁ ≠ 0\n")
+cat("α =", alpha, "\n\n")
+
+beta_1_hat <- coef(modelo)[2]
+SE_beta_1 <- sqrt(sigma_hat_2 / S_xx)
+t_0_beta1 <- beta_1_hat / SE_beta_1
+p_valor_beta1 <- 2 * pt(abs(t_0_beta1), df = gl, lower.tail = FALSE)
+
+cat("β̂₁ =", round(beta_1_hat, 4), "\n")
+cat("SE(β̂₁) =", round(SE_beta_1, 4), "\n")
+cat("t₀ =", round(t_0_beta1, 4), "\n")
+cat("Valor p =", round(p_valor_beta1, 6), "\n\n")
+
+if (p_valor_beta1 < alpha) {
+  cat("p-valor < α → RECHAZAMOS H₀\n")
+  cat("Conclusión: β₁ ≠ 0, el modelo ES ÚTIL\n")
+} else {
+  cat("p-valor ≥ α → NO RECHAZAMOS H₀\n")
+  cat("Conclusión: β₁ = 0, el modelo NO es útil\n")
+}
+
+# =====================================
+# PRUEBA PARA β₀ (INTERCEPTO)
+# =====================================
+cat("\n===== PRUEBA PARA β₀ =====\n")
+cat("H₀: β₀ = 0  vs  H₁: β₀ ≠ 0\n")
+cat("α =", alpha, "\n\n")
+
+beta_0_hat <- coef(modelo)[1]
+SE_beta_0 <- sqrt(sigma_hat_2 * (1/n + mean(x)^2/S_xx))
+t_0_beta0 <- beta_0_hat / SE_beta_0
+p_valor_beta0 <- 2 * pt(abs(t_0_beta0), df = gl, lower.tail = FALSE)
+
+cat("β̂₀ =", round(beta_0_hat, 4), "\n")
+cat("SE(β̂₀) =", round(SE_beta_0, 4), "\n")
+cat("t₀ =", round(t_0_beta0, 4), "\n")
+cat("Valor p =", round(p_valor_beta0, 6), "\n\n")
+
+if (p_valor_beta0 < alpha) {
+  cat("p-valor < α → RECHAZAMOS H₀\n")
+  cat("Conclusión: β₀ ≠ 0, el intercepto ES significativo\n")
+} else {
+  cat("p-valor ≥ α → NO RECHAZAMOS H₀\n")
+  cat("Conclusión: β₀ = 0, el intercepto NO es significativo\n")
+}
+
+```
+
+
+
+
+
+
